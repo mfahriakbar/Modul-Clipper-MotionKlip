@@ -1,1275 +1,3157 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Modul Clipper — MotionKlip</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
-  <style>
-    /* ── TOKENS ─────────────────────────────────────────── */
-    :root {
-      --bg:        #0c0e14;
-      --surface:   #13161f;
-      --card:      #1a1e2a;
-      --border:    #252a38;
-      --accent:    #7c5cfc;
-      --accent2:   #00d4aa;
-      --warn:      #ff5e5e;
-      --text:      #e8eaf0;
-      --muted:     #7a8099;
-      --mono:      'Space Mono', monospace;
-      --sans:      'Space Grotesk', sans-serif;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Modul Clipper — MotionKlip</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ── TOKENS ─────────────────────────────────────────── */
+      :root {
+        --bg: #0c0e14;
+        --surface: #13161f;
+        --card: #1a1e2a;
+        --border: #252a38;
+        --accent: #7c5cfc;
+        --accent2: #00d4aa;
+        --warn: #ff5e5e;
+        --text: #e8eaf0;
+        --muted: #7a8099;
+        --mono: "Space Mono", monospace;
+        --sans: "Space Grotesk", sans-serif;
+      }
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-    html { scroll-behavior: smooth; }
+      html {
+        scroll-behavior: smooth;
+      }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--sans);
-      font-size: 16px;
-      line-height: 1.7;
-      min-height: 100vh;
-    }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 16px;
+        line-height: 1.7;
+        min-height: 100vh;
+      }
 
-    /* ── SCROLLBAR ──────────────────────────────────────── */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: var(--bg); }
-    ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+      /* ── SCROLLBAR ──────────────────────────────────────── */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--accent);
+        border-radius: 3px;
+      }
 
-    /* ── NOISE TEXTURE ─────────────────────────────────── */
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-      pointer-events: none; z-index: 0;
-    }
+      /* ── NOISE TEXTURE ─────────────────────────────────── */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: 0;
+      }
 
-    /* ── LAYOUT ─────────────────────────────────────────── */
-    .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+      /* ── LAYOUT ─────────────────────────────────────────── */
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
 
-    /* ── TOPBAR ─────────────────────────────────────────── */
-    .topbar {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(12,14,20,0.85);
-      backdrop-filter: blur(14px);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 0;
-    }
-    .topbar-inner {
-      max-width: 900px; margin: 0 auto; padding: 0 24px;
-      display: flex; align-items: center; gap: 12px;
-    }
-    .logo-mark {
-      width: 32px; height: 32px;
-      background: var(--accent);
-      border-radius: 8px;
-      display: grid; place-items: center;
-      font-family: var(--mono);
-      font-size: 13px; font-weight: 700;
-      color: #fff; letter-spacing: -1px;
-      flex-shrink: 0;
-    }
-    .logo-text { font-weight: 700; font-size: 15px; letter-spacing: -0.3px; }
-    .logo-text span { color: var(--accent); }
-    .logo-img {
-      height: 36px;
-      width: auto;
-      mix-blend-mode: screen;
-      filter: brightness(1.1);
-    }
-    .topbar-badge {
-      margin-left: auto;
-      background: rgba(124,92,252,0.12);
-      border: 1px solid rgba(124,92,252,0.3);
-      color: var(--accent);
-      font-size: 11px; font-weight: 600;
-      padding: 4px 10px; border-radius: 20px;
-      font-family: var(--mono);
-    }
+      /* ── TOPBAR ─────────────────────────────────────────── */
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(12, 14, 20, 0.85);
+        backdrop-filter: blur(14px);
+        border-bottom: 1px solid var(--border);
+        padding: 14px 0;
+      }
+      .topbar-inner {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .logo-mark {
+        width: 32px;
+        height: 32px;
+        background: var(--accent);
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        font-family: var(--mono);
+        font-size: 13px;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: -1px;
+        flex-shrink: 0;
+      }
+      .logo-text {
+        font-weight: 700;
+        font-size: 15px;
+        letter-spacing: -0.3px;
+      }
+      .logo-text span {
+        color: var(--accent);
+      }
+      .logo-img {
+        height: 36px;
+        width: auto;
+        mix-blend-mode: screen;
+        filter: brightness(1.1);
+      }
+      .topbar-badge {
+        margin-left: auto;
+        background: rgba(124, 92, 252, 0.12);
+        border: 1px solid rgba(124, 92, 252, 0.3);
+        color: var(--accent);
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-family: var(--mono);
+      }
 
-    /* ── HERO ───────────────────────────────────────────── */
-    .hero {
-      padding: 80px 0 60px;
-      position: relative; overflow: hidden;
-    }
-    .hero-glow {
-      position: absolute;
-      width: 600px; height: 400px;
-      background: radial-gradient(ellipse, rgba(124,92,252,0.18) 0%, transparent 70%);
-      top: -80px; left: -100px;
-      pointer-events: none;
-    }
-    .hero-eyebrow {
-      font-family: var(--mono);
-      font-size: 11px; letter-spacing: 2.5px;
-      color: var(--accent); text-transform: uppercase;
-      margin-bottom: 20px;
-    }
-    .hero h1 {
-      font-size: clamp(32px, 6vw, 56px);
-      font-weight: 700; line-height: 1.1;
-      letter-spacing: -1.5px;
-      margin-bottom: 20px;
-    }
-    .hero h1 em {
-      font-style: normal;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .hero-desc {
-      color: var(--muted); font-size: 17px;
-      max-width: 560px; margin-bottom: 36px;
-    }
-    .hero-pills { display: flex; flex-wrap: wrap; gap: 10px; }
-    .pill {
-      display: flex; align-items: center; gap: 6px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 6px 14px; font-size: 13px;
-      color: var(--muted);
-    }
-    .pill .dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--accent2); flex-shrink: 0;
-    }
+      /* ── HERO ───────────────────────────────────────────── */
+      .hero {
+        padding: 80px 0 60px;
+        position: relative;
+        overflow: hidden;
+      }
+      .hero-glow {
+        position: absolute;
+        width: 600px;
+        height: 400px;
+        background: radial-gradient(
+          ellipse,
+          rgba(124, 92, 252, 0.18) 0%,
+          transparent 70%
+        );
+        top: -80px;
+        left: -100px;
+        pointer-events: none;
+      }
+      .hero-eyebrow {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 2.5px;
+        color: var(--accent);
+        text-transform: uppercase;
+        margin-bottom: 20px;
+      }
+      .hero h1 {
+        font-size: clamp(32px, 6vw, 56px);
+        font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: -1.5px;
+        margin-bottom: 20px;
+      }
+      .hero h1 em {
+        font-style: normal;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .hero-desc {
+        color: var(--muted);
+        font-size: 17px;
+        max-width: 560px;
+        margin-bottom: 36px;
+      }
+      .hero-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .pill {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .pill .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent2);
+        flex-shrink: 0;
+      }
 
-    /* ── PROGRESS NAV ───────────────────────────────────── */
-    .progress-nav {
-      display: flex; gap: 8px; margin: 48px 0;
-      overflow-x: auto; padding-bottom: 4px;
-    }
-    .progress-nav::-webkit-scrollbar { height: 0; }
-    .pnav-item {
-      display: flex; align-items: center; gap: 8px;
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 10px; padding: 10px 16px;
-      cursor: pointer; white-space: nowrap;
-      transition: border-color .2s, background .2s;
-      text-decoration: none; color: var(--muted); font-size: 13px;
-    }
-    .pnav-item:hover, .pnav-item.active {
-      border-color: var(--accent);
-      color: var(--text);
-      background: rgba(124,92,252,0.08);
-    }
-    .pnav-num {
-      font-family: var(--mono); font-size: 10px;
-      background: rgba(124,92,252,0.2);
-      color: var(--accent);
-      border-radius: 4px; padding: 2px 6px;
-    }
+      /* ── PROGRESS NAV ───────────────────────────────────── */
+      .progress-nav {
+        display: flex;
+        gap: 8px;
+        margin: 48px 0;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+      .progress-nav::-webkit-scrollbar {
+        height: 0;
+      }
+      .pnav-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 16px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition:
+          border-color 0.2s,
+          background 0.2s;
+        text-decoration: none;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .pnav-item:hover,
+      .pnav-item.active {
+        border-color: var(--accent);
+        color: var(--text);
+        background: rgba(124, 92, 252, 0.08);
+      }
+      .pnav-num {
+        font-family: var(--mono);
+        font-size: 10px;
+        background: rgba(124, 92, 252, 0.2);
+        color: var(--accent);
+        border-radius: 4px;
+        padding: 2px 6px;
+      }
 
-    /* ── CHAPTER SECTIONS ───────────────────────────────── */
-    .chapter {
-      margin-bottom: 72px;
-      scroll-margin-top: 70px;
-    }
-    .chapter-header {
-      display: flex; align-items: flex-start; gap: 18px;
-      margin-bottom: 32px;
-    }
-    .chapter-icon {
-      width: 48px; height: 48px; flex-shrink: 0;
-      background: rgba(124,92,252,0.12);
-      border: 1px solid rgba(124,92,252,0.25);
-      border-radius: 12px;
-      display: grid; place-items: center; font-size: 22px;
-    }
-    .chapter-meta { display: flex; flex-direction: column; gap: 4px; }
-    .chapter-label {
-      font-family: var(--mono); font-size: 10px;
-      letter-spacing: 2px; text-transform: uppercase;
-      color: var(--accent);
-    }
-    .chapter-title {
-      font-size: 22px; font-weight: 700;
-      letter-spacing: -0.5px; line-height: 1.2;
-    }
+      /* ── CHAPTER SECTIONS ───────────────────────────────── */
+      .chapter {
+        margin-bottom: 72px;
+        scroll-margin-top: 70px;
+      }
+      .chapter-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 18px;
+        margin-bottom: 32px;
+      }
+      .chapter-icon {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+        background: rgba(124, 92, 252, 0.12);
+        border: 1px solid rgba(124, 92, 252, 0.25);
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-size: 22px;
+      }
+      .chapter-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .chapter-label {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      .chapter-title {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        line-height: 1.2;
+      }
 
-    /* ── CARDS ──────────────────────────────────────────── */
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 24px; margin-bottom: 16px;
-    }
-    .card-title {
-      font-size: 15px; font-weight: 600;
-      margin-bottom: 14px;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .card-title .icon { font-size: 18px; }
+      /* ── CARDS ──────────────────────────────────────────── */
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 16px;
+      }
+      .card-title {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .card-title .icon {
+        font-size: 18px;
+      }
 
-    /* ── STEP LIST ──────────────────────────────────────── */
-    .steps { display: flex; flex-direction: column; gap: 0; }
-    .step {
-      display: flex; gap: 16px;
-      position: relative; padding-bottom: 24px;
-    }
-    .step:last-child { padding-bottom: 0; }
-    .step-left { display: flex; flex-direction: column; align-items: center; }
-    .step-num {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: rgba(124,92,252,0.15);
-      border: 1.5px solid var(--accent);
-      display: grid; place-items: center;
-      font-family: var(--mono); font-size: 12px; font-weight: 700;
-      color: var(--accent); flex-shrink: 0;
-    }
-    .step-line {
-      flex: 1; width: 1.5px;
-      background: linear-gradient(to bottom, var(--accent) 0%, var(--border) 100%);
-      margin: 4px 0; min-height: 20px;
-    }
-    .step:last-child .step-line { display: none; }
-    .step-body { padding-top: 6px; flex: 1; }
-    .step-body p { color: var(--muted); font-size: 14px; margin-top: 4px; }
-    .step-body strong { color: var(--text); font-size: 15px; display: block; margin-bottom: 4px; }
+      /* ── STEP LIST ──────────────────────────────────────── */
+      .steps {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .step {
+        display: flex;
+        gap: 16px;
+        position: relative;
+        padding-bottom: 24px;
+      }
+      .step:last-child {
+        padding-bottom: 0;
+      }
+      .step-left {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .step-num {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(124, 92, 252, 0.15);
+        border: 1.5px solid var(--accent);
+        display: grid;
+        place-items: center;
+        font-family: var(--mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--accent);
+        flex-shrink: 0;
+      }
+      .step-line {
+        flex: 1;
+        width: 1.5px;
+        background: linear-gradient(
+          to bottom,
+          var(--accent) 0%,
+          var(--border) 100%
+        );
+        margin: 4px 0;
+        min-height: 20px;
+      }
+      .step:last-child .step-line {
+        display: none;
+      }
+      .step-body {
+        padding-top: 6px;
+        flex: 1;
+      }
+      .step-body p {
+        color: var(--muted);
+        font-size: 14px;
+        margin-top: 4px;
+      }
+      .step-body strong {
+        color: var(--text);
+        font-size: 15px;
+        display: block;
+        margin-bottom: 4px;
+      }
 
-    /* ── CPM CALCULATOR ─────────────────────────────────── */
-    .calc-wrap {
-      background: linear-gradient(135deg, rgba(124,92,252,0.08), rgba(0,212,170,0.05));
-      border: 1px solid rgba(124,92,252,0.25);
-      border-radius: 16px; padding: 28px;
-    }
-    .calc-title {
-      font-size: 15px; font-weight: 600; margin-bottom: 20px;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
-    @media (max-width: 480px) { .calc-grid { grid-template-columns: 1fr; } }
-    .calc-field label {
-      display: block; font-size: 11px; font-weight: 600;
-      letter-spacing: 1.5px; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 8px;
-    }
-    .calc-field input {
-      width: 100%; background: var(--bg);
-      border: 1px solid var(--border); border-radius: 8px;
-      padding: 10px 14px; font-family: var(--mono);
-      font-size: 15px; color: var(--text);
-      outline: none; transition: border-color .2s;
-    }
-    .calc-field input:focus { border-color: var(--accent); }
-    .calc-result {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 10px; padding: 16px 20px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .calc-result-label { font-size: 12px; color: var(--muted); }
-    .calc-result-val {
-      font-family: var(--mono); font-size: 24px;
-      font-weight: 700; color: var(--accent2);
-    }
+      /* ── CPM CALCULATOR ─────────────────────────────────── */
+      .calc-wrap {
+        background: linear-gradient(
+          135deg,
+          rgba(124, 92, 252, 0.08),
+          rgba(0, 212, 170, 0.05)
+        );
+        border: 1px solid rgba(124, 92, 252, 0.25);
+        border-radius: 16px;
+        padding: 28px;
+      }
+      .calc-title {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .calc-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+      @media (max-width: 480px) {
+        .calc-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .calc-field label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+      .calc-field input {
+        width: 100%;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-family: var(--mono);
+        font-size: 15px;
+        color: var(--text);
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .calc-field input:focus {
+        border-color: var(--accent);
+      }
+      .calc-result {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .calc-result-label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .calc-result-val {
+        font-family: var(--mono);
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--accent2);
+      }
 
-    /* ── REWARD CARDS GRID ──────────────────────────────── */
-    .reward-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    @media (max-width: 600px) { .reward-grid { grid-template-columns: 1fr; } }
-    .reward-card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 14px; padding: 20px;
-      transition: border-color .2s, transform .2s;
-    }
-    .reward-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-    .reward-card-icon { font-size: 28px; margin-bottom: 12px; }
-    .reward-card-name { font-weight: 600; font-size: 14px; margin-bottom: 6px; }
-    .reward-card-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+      /* ── REWARD CARDS GRID ──────────────────────────────── */
+      .reward-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+      @media (max-width: 600px) {
+        .reward-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .reward-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px;
+        transition:
+          border-color 0.2s,
+          transform 0.2s;
+      }
+      .reward-card:hover {
+        border-color: var(--accent);
+        transform: translateY(-2px);
+      }
+      .reward-card-icon {
+        font-size: 28px;
+        margin-bottom: 12px;
+      }
+      .reward-card-name {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 6px;
+      }
+      .reward-card-desc {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
 
-    /* ── INFO BOX ───────────────────────────────────────── */
-    .info-box {
-      border-radius: 12px; padding: 18px 20px;
-      margin-bottom: 16px;
-      display: flex; gap: 14px; align-items: flex-start;
-    }
-    .info-box.tip {
-      background: rgba(0,212,170,0.06);
-      border: 1px solid rgba(0,212,170,0.2);
-    }
-    .info-box.warn {
-      background: rgba(255,94,94,0.06);
-      border: 1px solid rgba(255,94,94,0.2);
-    }
-    .info-box-icon { font-size: 20px; flex-shrink: 0; padding-top: 2px; }
-    .info-box-text { font-size: 14px; color: var(--muted); }
-    .info-box-text strong { color: var(--text); display: block; margin-bottom: 4px; font-size: 14px; }
+      /* ── INFO BOX ───────────────────────────────────────── */
+      .info-box {
+        border-radius: 12px;
+        padding: 18px 20px;
+        margin-bottom: 16px;
+        display: flex;
+        gap: 14px;
+        align-items: flex-start;
+      }
+      .info-box.tip {
+        background: rgba(0, 212, 170, 0.06);
+        border: 1px solid rgba(0, 212, 170, 0.2);
+      }
+      .info-box.warn {
+        background: rgba(255, 94, 94, 0.06);
+        border: 1px solid rgba(255, 94, 94, 0.2);
+      }
+      .info-box-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+        padding-top: 2px;
+      }
+      .info-box-text {
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .info-box-text strong {
+        color: var(--text);
+        display: block;
+        margin-bottom: 4px;
+        font-size: 14px;
+      }
 
-    /* ── RULES LIST ─────────────────────────────────────── */
-    .rules-list { display: flex; flex-direction: column; gap: 10px; }
-    .rule-item {
-      display: flex; gap: 12px; align-items: flex-start;
-      background: var(--surface); border-radius: 10px; padding: 14px 16px;
-      border: 1px solid var(--border);
-    }
-    .rule-x {
-      width: 22px; height: 22px; border-radius: 6px;
-      background: rgba(255,94,94,0.15); border: 1px solid rgba(255,94,94,0.3);
-      display: grid; place-items: center;
-      font-size: 12px; color: var(--warn); flex-shrink: 0; margin-top: 1px;
-    }
-    .rule-text { font-size: 14px; color: var(--muted); }
+      /* ── RULES LIST ─────────────────────────────────────── */
+      .rules-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .rule-item {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        background: var(--surface);
+        border-radius: 10px;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+      }
+      .rule-x {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        background: rgba(255, 94, 94, 0.15);
+        border: 1px solid rgba(255, 94, 94, 0.3);
+        display: grid;
+        place-items: center;
+        font-size: 12px;
+        color: var(--warn);
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+      .rule-text {
+        font-size: 14px;
+        color: var(--muted);
+      }
 
-    /* ── CLAIM TIMELINE ─────────────────────────────────── */
-    .timeline { display: flex; flex-direction: column; gap: 0; }
-    .tl-item {
-      display: flex; gap: 18px;
-      padding-bottom: 28px; position: relative;
-    }
-    .tl-item:last-child { padding-bottom: 0; }
-    .tl-left { display: flex; flex-direction: column; align-items: center; }
-    .tl-dot {
-      width: 38px; height: 38px; border-radius: 50%;
-      background: rgba(124,92,252,0.15);
-      border: 2px solid var(--accent);
-      display: grid; place-items: center;
-      font-size: 16px; flex-shrink: 0;
-    }
-    .tl-connector {
-      flex: 1; width: 2px;
-      background: linear-gradient(to bottom, var(--accent) 0%, var(--border) 100%);
-      margin: 6px auto; min-height: 28px;
-    }
-    .tl-item:last-child .tl-connector { display: none; }
-    .tl-body { padding-top: 8px; }
-    .tl-body h4 { font-weight: 600; font-size: 15px; margin-bottom: 5px; }
-    .tl-body p { font-size: 14px; color: var(--muted); }
+      /* ── CLAIM TIMELINE ─────────────────────────────────── */
+      .timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+      .tl-item {
+        display: flex;
+        gap: 18px;
+        padding-bottom: 28px;
+        position: relative;
+      }
+      .tl-item:last-child {
+        padding-bottom: 0;
+      }
+      .tl-left {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .tl-dot {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: rgba(124, 92, 252, 0.15);
+        border: 2px solid var(--accent);
+        display: grid;
+        place-items: center;
+        font-size: 16px;
+        flex-shrink: 0;
+      }
+      .tl-connector {
+        flex: 1;
+        width: 2px;
+        background: linear-gradient(
+          to bottom,
+          var(--accent) 0%,
+          var(--border) 100%
+        );
+        margin: 6px auto;
+        min-height: 28px;
+      }
+      .tl-item:last-child .tl-connector {
+        display: none;
+      }
+      .tl-body {
+        padding-top: 8px;
+      }
+      .tl-body h4 {
+        font-weight: 600;
+        font-size: 15px;
+        margin-bottom: 5px;
+      }
+      .tl-body p {
+        font-size: 14px;
+        color: var(--muted);
+      }
 
-    /* ── ILLUSTRATION SVGs ──────────────────────────────── */
-    .illus-wrap {
-      margin: 20px 0; border-radius: 14px; overflow: hidden;
-      border: 1px solid var(--border);
-    }
-    .illus-wrap svg { display: block; width: 100%; }
+      /* ── ILLUSTRATION SVGs ──────────────────────────────── */
+      .illus-wrap {
+        margin: 20px 0;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+      }
+      .illus-wrap svg {
+        display: block;
+        width: 100%;
+      }
 
-    /* ── DIVIDER ────────────────────────────────────────── */
-    .divider {
-      border: none; height: 1px;
-      background: linear-gradient(to right, transparent, var(--border), transparent);
-      margin: 56px 0;
-    }
+      /* ── DIVIDER ────────────────────────────────────────── */
+      .divider {
+        border: none;
+        height: 1px;
+        background: linear-gradient(
+          to right,
+          transparent,
+          var(--border),
+          transparent
+        );
+        margin: 56px 0;
+      }
 
-    /* ── FOOTER ─────────────────────────────────────────── */
-    .footer {
-      border-top: 1px solid var(--border);
-      padding: 40px 0;
-      text-align: center;
-    }
-    .footer-logo { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px; }
-    .footer-logo span { color: var(--accent); }
-    .footer-sub { font-size: 13px; color: var(--muted); }
-    .footer-cta {
-      display: inline-flex; align-items: center; gap: 8px;
-      margin-top: 20px;
-      background: var(--accent);
-      color: #fff; font-weight: 600; font-size: 14px;
-      padding: 12px 24px; border-radius: 10px;
-      text-decoration: none; transition: opacity .2s;
-    }
-    .footer-cta:hover { opacity: 0.85; }
+      /* ── FOOTER ─────────────────────────────────────────── */
+      .footer {
+        border-top: 1px solid var(--border);
+        padding: 40px 0;
+        text-align: center;
+      }
+      .footer-logo {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        margin-bottom: 8px;
+      }
+      .footer-logo span {
+        color: var(--accent);
+      }
+      .footer-sub {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .footer-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 20px;
+        background: var(--accent);
+        color: #fff;
+        font-weight: 600;
+        font-size: 14px;
+        padding: 12px 24px;
+        border-radius: 10px;
+        text-decoration: none;
+        transition: opacity 0.2s;
+      }
+      .footer-cta:hover {
+        opacity: 0.85;
+      }
 
-    /* ── MOBILE ─────────────────────────────────────────── */
-    @media (max-width: 600px) {
-      .hero { padding: 56px 0 40px; }
-      .chapter-title { font-size: 19px; }
-      .card { padding: 18px; }
-    }
+      /* ── RESPONSIVE GRIDS (DITAMBAHKAN) ─────────────────── */
+      .responsive-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .responsive-grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
 
-    /* ── TAG HIGHLIGHT ──────────────────────────────────── */
-    .tag {
-      font-family: var(--mono); font-size: 12px;
-      background: rgba(124,92,252,0.12);
-      border: 1px solid rgba(124,92,252,0.2);
-      color: var(--accent); border-radius: 5px;
-      padding: 1px 7px;
-    }
+      /* ── MOBILE ─────────────────────────────────────────── */
+      @media (max-width: 600px) {
+        .hero {
+          padding: 56px 0 40px;
+        }
+        .chapter-title {
+          font-size: 19px;
+        }
+        .card {
+          padding: 18px;
+        }
+        /* Membuat grid menjadi 1 kolom di layar HP */
+        .responsive-grid-2 {
+          grid-template-columns: 1fr;
+        }
+        .responsive-grid-3 {
+          grid-template-columns: 1fr;
+        }
+      }
 
-    /* ── HASHTAG BOX ────────────────────────────────────── */
-    .hashtag-box {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 10px; padding: 14px 18px;
-      font-family: var(--mono); font-size: 14px;
-      color: var(--accent2); margin-top: 12px;
-      line-height: 1.8;
-    }
+      /* ── TAG HIGHLIGHT ──────────────────────────────────── */
+      .tag {
+        font-family: var(--mono);
+        font-size: 12px;
+        background: rgba(124, 92, 252, 0.12);
+        border: 1px solid rgba(124, 92, 252, 0.2);
+        color: var(--accent);
+        border-radius: 5px;
+        padding: 1px 7px;
+      }
 
-    /* ── BANNER ─────────────────────────────────────────── */
-    .banner-section {
-      padding: 24px 0 0;
-    }
-    .banner-wrap {
-      border-radius: 16px; overflow: hidden;
-      border: 1px solid var(--border);
-      position: relative;
-    }
-    .banner-wrap img {
-      display: block; width: 100%;
-      height: auto;
-    }
-    /* ── IG FLOAT BADGE ─────────────────────────────────── */
-    .ig-float {
-      position: fixed;
-      bottom: 24px; right: 24px;
-      z-index: 200;
-      display: flex; align-items: center; gap: 10px;
-      background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
-      color: #fff; font-weight: 700; font-size: 13px;
-      padding: 10px 18px 10px 14px;
-      border-radius: 50px;
-      text-decoration: none;
-      box-shadow: 0 8px 24px rgba(131,58,180,0.4);
-      transition: transform .2s, box-shadow .2s;
-    }
-    .ig-float:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(131,58,180,0.5); }
-    .ig-float svg { flex-shrink: 0; }
-    /* ── IG FOOTER LINK ─────────────────────────────────── */
-    .footer-ig {
-      display: inline-flex; align-items: center; gap: 8px;
-      margin-top: 16px;
-      background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
-      color: #fff; font-weight: 600; font-size: 14px;
-      padding: 10px 22px; border-radius: 50px;
-      text-decoration: none; transition: opacity .2s;
-    }
-    .footer-ig:hover { opacity: 0.85; }
-    @media (max-width: 600px) {
-      .ig-float { bottom: 16px; right: 16px; font-size: 12px; padding: 9px 14px 9px 12px; }
-    }
+      /* ── HASHTAG BOX ────────────────────────────────────── */
+      .hashtag-box {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 18px;
+        font-family: var(--mono);
+        font-size: 14px;
+        color: var(--accent2);
+        margin-top: 12px;
+        line-height: 1.8;
+      }
 
-  </style>
-</head>
-<body>
+      /* ── BANNER ─────────────────────────────────────────── */
+      .banner-section {
+        padding: 24px 0 0;
+      }
+      .banner-wrap {
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        position: relative;
+      }
+      .banner-wrap img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+      /* ── IG FLOAT BADGE ─────────────────────────────────── */
+      .ig-float {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+        color: #fff;
+        font-weight: 700;
+        font-size: 13px;
+        padding: 10px 18px 10px 14px;
+        border-radius: 50px;
+        text-decoration: none;
+        box-shadow: 0 8px 24px rgba(131, 58, 180, 0.4);
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .ig-float:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 32px rgba(131, 58, 180, 0.5);
+      }
+      .ig-float svg {
+        flex-shrink: 0;
+      }
+      /* ── IG FOOTER LINK ─────────────────────────────────── */
+      .footer-ig {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 16px;
+        background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+        color: #fff;
+        font-weight: 600;
+        font-size: 14px;
+        padding: 10px 22px;
+        border-radius: 50px;
+        text-decoration: none;
+        transition: opacity 0.2s;
+      }
+      .footer-ig:hover {
+        opacity: 0.85;
+      }
+      @media (max-width: 600px) {
+        .ig-float {
+          bottom: 16px;
+          right: 16px;
+          font-size: 12px;
+          padding: 9px 14px 9px 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="topbar">
+      <div class="topbar-inner">
+        <img src="MOTIONKLIP-LOGO-UGC.png" alt="MotionKlip" class="logo-img" />
+        <div class="topbar-badge">MODUL CLIPPER</div>
+      </div>
+    </nav>
 
-<!-- TOPBAR -->
-<nav class="topbar">
-  <div class="topbar-inner">
-    <img src="MOTIONKLIP-LOGO-UGC.png" alt="MotionKlip" class="logo-img" />
-    <div class="topbar-badge">MODUL CLIPPER</div>
-  </div>
-</nav>
+    <section class="banner-section">
+      <div class="container">
+        <div class="banner-wrap">
+          <img
+            src="banner.png"
+            alt="Clipper di MotionKlip — Create · Clip · Grow"
+          />
+        </div>
+      </div>
+    </section>
 
+    <section class="hero">
+      <div class="hero-glow"></div>
+      <div class="container">
+        <div class="hero-eyebrow">📖 Panduan Lengkap</div>
+        <h1>Dari <em>Nol</em> Sampai<br /><em>Payout</em></h1>
+        <p class="hero-desc">
+          Modul resmi untuk calon Clipper MotionKlip. Pelajari Discord, sistem
+          reward, eksekusi campaign, hingga cara claim penghasilan pertamamu.
+        </p>
+        <div class="hero-pills">
+          <div class="pill"><span class="dot"></span>Discord Setup</div>
+          <div class="pill"><span class="dot"></span>Sistem CPM</div>
+          <div class="pill"><span class="dot"></span>Rules Campaign</div>
+          <div class="pill"><span class="dot"></span>Cara Claim</div>
+          <div class="pill"><span class="dot"></span>Tips Pro Clipper</div>
+        </div>
+      </div>
+    </section>
 
-<!-- BANNER -->
-<section class="banner-section">
-  <div class="container">
-    <div class="banner-wrap">
-      <img src="banner.png" alt="Clipper di MotionKlip — Create · Clip · Grow" />
-    </div>
-  </div>
-</section>
-
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-glow"></div>
-  <div class="container">
-    <div class="hero-eyebrow">📖 Panduan Lengkap</div>
-    <h1>Dari <em>Nol</em> Sampai<br/><em>Payout</em></h1>
-    <p class="hero-desc">
-      Modul resmi untuk calon Clipper MotionKlip. Pelajari Discord, sistem reward, eksekusi campaign, hingga cara claim penghasilan pertamamu.
-    </p>
-    <div class="hero-pills">
-      <div class="pill"><span class="dot"></span>Discord Setup</div>
-      <div class="pill"><span class="dot"></span>Sistem CPM</div>
-      <div class="pill"><span class="dot"></span>Rules Campaign</div>
-      <div class="pill"><span class="dot"></span>Cara Claim</div>
-      <div class="pill"><span class="dot"></span>Tips Pro Clipper</div>
-    </div>
-  </div>
-</section>
-
-<!-- PROGRESS NAV -->
-<div class="container">
-  <div class="progress-nav">
-    <a href="#bab1" class="pnav-item active">
-      <span class="pnav-num">BAB 1</span> Discord & Persiapan
-    </a>
-    <a href="#bab2" class="pnav-item">
-      <span class="pnav-num">BAB 2</span> Penghasilan & Reward
-    </a>
-    <a href="#bab3" class="pnav-item">
-      <span class="pnav-num">BAB 3</span> Eksekusi Campaign
-    </a>
-    <a href="#bab4" class="pnav-item">
-      <span class="pnav-num">BAB 4</span> Cara Claim
-    </a>
-    <a href="#bab5" class="pnav-item">
-      <span class="pnav-num">BAB 5</span> Tips Pro Clipper
-    </a>
-  </div>
-</div>
-
-<div class="container">
-
-  <!-- ─── BAB 1 ─────────────────────────────────────────── -->
-  <section class="chapter" id="bab1">
-    <div class="chapter-header">
-      <div class="chapter-icon">💬</div>
-      <div class="chapter-meta">
-        <div class="chapter-label">Bab 1</div>
-        <div class="chapter-title">Perkenalan Discord & Persiapan Awal</div>
+    <div class="container">
+      <div class="progress-nav">
+        <a href="#bab1" class="pnav-item active">
+          <span class="pnav-num">BAB 1</span> Discord & Persiapan
+        </a>
+        <a href="#bab2" class="pnav-item">
+          <span class="pnav-num">BAB 2</span> Penghasilan & Reward
+        </a>
+        <a href="#bab3" class="pnav-item">
+          <span class="pnav-num">BAB 3</span> Eksekusi Campaign
+        </a>
+        <a href="#bab4" class="pnav-item">
+          <span class="pnav-num">BAB 4</span> Cara Claim
+        </a>
+        <a href="#bab5" class="pnav-item">
+          <span class="pnav-num">BAB 5</span> Tips Pro Clipper
+        </a>
       </div>
     </div>
 
-    <!-- Discord Illustration -->
-    <div class="illus-wrap">
-      <svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg" style="background:#13161f;">
-        <!-- sidebar -->
-        <rect x="0" y="0" width="56" height="200" fill="#0c0e14"/>
-        <rect x="12" y="12" width="32" height="32" rx="8" fill="#7c5cfc"/>
-        <text x="28" y="32" text-anchor="middle" fill="#fff" font-family="monospace" font-size="13" font-weight="bold">MK</text>
-        <circle cx="28" cy="64" r="14" fill="#1a1e2a" stroke="#252a38" stroke-width="1"/>
-        <circle cx="28" cy="100" r="14" fill="#1a1e2a" stroke="#252a38" stroke-width="1"/>
-        <circle cx="28" cy="136" r="14" fill="#1a1e2a" stroke="#252a38" stroke-width="1"/>
-        <!-- channel list -->
-        <rect x="56" y="0" width="160" height="200" fill="#13161f" stroke="#252a38" stroke-width="1"/>
-        <text x="72" y="24" fill="#7a8099" font-size="10" font-family="sans-serif" font-weight="600" letter-spacing="1">MOTIONKLIP</text>
-        <rect x="64" y="32" width="144" height="28" rx="6" fill="rgba(124,92,252,0.12)"/>
-        <text x="76" y="50" fill="#e8eaf0" font-size="12" font-family="sans-serif"># 📢 pengumuman</text>
-        <text x="76" y="78" fill="#7a8099" font-size="12" font-family="sans-serif"># 📁 bahan-video</text>
-        <text x="76" y="102" fill="#7a8099" font-size="12" font-family="sans-serif"># 💸 claim-reward</text>
-        <text x="76" y="126" fill="#7a8099" font-size="12" font-family="sans-serif"># ❓ bantuan</text>
-        <text x="72" y="152" fill="#7a8099" font-size="10" font-family="sans-serif" font-weight="600" letter-spacing="1">CAMPAIGN AKTIF</text>
-        <text x="76" y="174" fill="#00d4aa" font-size="12" font-family="sans-serif"># 🎬 campaign-rucas</text>
-        <!-- main chat area -->
-        <rect x="216" y="0" width="584" height="200" fill="#1a1e2a"/>
-        <rect x="232" y="20" width="36" height="36" rx="18" fill="#7c5cfc"/>
-        <text x="250" y="44" text-anchor="middle" fill="#fff" font-family="monospace" font-size="14" font-weight="bold">A</text>
-        <text x="278" y="32" fill="#e8eaf0" font-size="13" font-family="sans-serif" font-weight="600">Admin MotionKlip</text>
-        <text x="278" y="49" fill="#7a8099" font-size="11" font-family="sans-serif">Hari ini pukul 09.00</text>
-        <rect x="278" y="58" width="460" height="36" rx="8" fill="rgba(124,92,252,0.08)" stroke="rgba(124,92,252,0.2)" stroke-width="1"/>
-        <text x="292" y="71" fill="#e8eaf0" font-size="12" font-family="sans-serif">🚀 Campaign Rucas LIVE! CPM Rp3.000 | Min. Claim: 5.000 views</text>
-        <text x="292" y="86" fill="#00d4aa" font-size="11" font-family="sans-serif">📎 Link bahan: drive.google.com/motionklip/rucas</text>
-        <!-- online badge -->
-        <rect x="660" y="12" width="120" height="22" rx="11" fill="rgba(0,212,170,0.1)" stroke="rgba(0,212,170,0.3)" stroke-width="1"/>
-        <circle cx="674" cy="23" r="4" fill="#00d4aa"/>
-        <text x="682" y="27" fill="#00d4aa" font-size="10" font-family="sans-serif" font-weight="600">Server ONLINE</text>
-        <!-- bottom input -->
-        <rect x="232" y="162" width="536" height="30" rx="8" fill="#0c0e14" stroke="#252a38" stroke-width="1"/>
-        <text x="248" y="181" fill="#7a8099" font-size="12" font-family="sans-serif">Kirim pesan...</text>
-      </svg>
-    </div>
-
-    <div class="info-box tip">
-      <div class="info-box-icon">💡</div>
-      <div class="info-box-text">
-        <strong>Apa itu Discord?</strong>
-        Discord adalah aplikasi komunikasi seperti grup WhatsApp/Telegram, namun jauh lebih lengkap. Semua bahan video, aturan campaign, dan laporan penghasilan ada di sini — ini adalah "Kantor Pusat" MotionKlip.
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title"><span class="icon">👁️</span> Cara Aktifkan "Show All Channels"</div>
-      <div class="steps">
-        <div class="step">
-          <div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div>
-          <div class="step-body">
-            <strong>Buka Discord & Masuk Server</strong>
-            <p>Buka aplikasi Discord dan masuk ke server <span class="tag">Motion Klip</span>.</p>
+    <div class="container">
+      <section class="chapter" id="bab1">
+        <div class="chapter-header">
+          <div class="chapter-icon">💬</div>
+          <div class="chapter-meta">
+            <div class="chapter-label">Bab 1</div>
+            <div class="chapter-title">Perkenalan Discord & Persiapan Awal</div>
           </div>
         </div>
-        <div class="step">
-          <div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div>
-          <div class="step-body">
-            <strong>Klik Nama Server</strong>
-            <p>Klik nama server <span class="tag">Setting Server Motion Klip</span> di pojok kiri atas.</p>
+
+        <div class="illus-wrap">
+          <svg
+            viewBox="0 0 800 200"
+            xmlns="http://www.w3.org/2000/svg"
+            style="background: #13161f"
+          >
+            <rect x="0" y="0" width="56" height="200" fill="#0c0e14" />
+            <rect x="12" y="12" width="32" height="32" rx="8" fill="#7c5cfc" />
+            <text
+              x="28"
+              y="32"
+              text-anchor="middle"
+              fill="#fff"
+              font-family="monospace"
+              font-size="13"
+              font-weight="bold"
+            >
+              MK
+            </text>
+            <circle
+              cx="28"
+              cy="64"
+              r="14"
+              fill="#1a1e2a"
+              stroke="#252a38"
+              stroke-width="1"
+            />
+            <circle
+              cx="28"
+              cy="100"
+              r="14"
+              fill="#1a1e2a"
+              stroke="#252a38"
+              stroke-width="1"
+            />
+            <circle
+              cx="28"
+              cy="136"
+              r="14"
+              fill="#1a1e2a"
+              stroke="#252a38"
+              stroke-width="1"
+            />
+            <rect
+              x="56"
+              y="0"
+              width="160"
+              height="200"
+              fill="#13161f"
+              stroke="#252a38"
+              stroke-width="1"
+            />
+            <text
+              x="72"
+              y="24"
+              fill="#7a8099"
+              font-size="10"
+              font-family="sans-serif"
+              font-weight="600"
+              letter-spacing="1"
+            >
+              MOTIONKLIP
+            </text>
+            <rect
+              x="64"
+              y="32"
+              width="144"
+              height="28"
+              rx="6"
+              fill="rgba(124,92,252,0.12)"
+            />
+            <text
+              x="76"
+              y="50"
+              fill="#e8eaf0"
+              font-size="12"
+              font-family="sans-serif"
+            >
+              # 📢 pengumuman
+            </text>
+            <text
+              x="76"
+              y="78"
+              fill="#7a8099"
+              font-size="12"
+              font-family="sans-serif"
+            >
+              # 📁 bahan-video
+            </text>
+            <text
+              x="76"
+              y="102"
+              fill="#7a8099"
+              font-size="12"
+              font-family="sans-serif"
+            >
+              # 💸 claim-reward
+            </text>
+            <text
+              x="76"
+              y="126"
+              fill="#7a8099"
+              font-size="12"
+              font-family="sans-serif"
+            >
+              # ❓ bantuan
+            </text>
+            <text
+              x="72"
+              y="152"
+              fill="#7a8099"
+              font-size="10"
+              font-family="sans-serif"
+              font-weight="600"
+              letter-spacing="1"
+            >
+              CAMPAIGN AKTIF
+            </text>
+            <text
+              x="76"
+              y="174"
+              fill="#00d4aa"
+              font-size="12"
+              font-family="sans-serif"
+            >
+              # 🎬 campaign-rucas
+            </text>
+            <rect x="216" y="0" width="584" height="200" fill="#1a1e2a" />
+            <rect
+              x="232"
+              y="20"
+              width="36"
+              height="36"
+              rx="18"
+              fill="#7c5cfc"
+            />
+            <text
+              x="250"
+              y="44"
+              text-anchor="middle"
+              fill="#fff"
+              font-family="monospace"
+              font-size="14"
+              font-weight="bold"
+            >
+              A
+            </text>
+            <text
+              x="278"
+              y="32"
+              fill="#e8eaf0"
+              font-size="13"
+              font-family="sans-serif"
+              font-weight="600"
+            >
+              Admin MotionKlip
+            </text>
+            <text
+              x="278"
+              y="49"
+              fill="#7a8099"
+              font-size="11"
+              font-family="sans-serif"
+            >
+              Hari ini pukul 09.00
+            </text>
+            <rect
+              x="278"
+              y="58"
+              width="460"
+              height="36"
+              rx="8"
+              fill="rgba(124,92,252,0.08)"
+              stroke="rgba(124,92,252,0.2)"
+              stroke-width="1"
+            />
+            <text
+              x="292"
+              y="71"
+              fill="#e8eaf0"
+              font-size="12"
+              font-family="sans-serif"
+            >
+              🚀 Campaign Rucas LIVE! CPM Rp3.000 | Min. Claim: 5.000 views
+            </text>
+            <text
+              x="292"
+              y="86"
+              fill="#00d4aa"
+              font-size="11"
+              font-family="sans-serif"
+            >
+              📎 Link bahan: drive.google.com/motionklip/rucas
+            </text>
+            <rect
+              x="660"
+              y="12"
+              width="120"
+              height="22"
+              rx="11"
+              fill="rgba(0,212,170,0.1)"
+              stroke="rgba(0,212,170,0.3)"
+              stroke-width="1"
+            />
+            <circle cx="674" cy="23" r="4" fill="#00d4aa" />
+            <text
+              x="682"
+              y="27"
+              fill="#00d4aa"
+              font-size="10"
+              font-family="sans-serif"
+              font-weight="600"
+            >
+              Server ONLINE
+            </text>
+            <rect
+              x="232"
+              y="162"
+              width="536"
+              height="30"
+              rx="8"
+              fill="#0c0e14"
+              stroke="#252a38"
+              stroke-width="1"
+            />
+            <text
+              x="248"
+              y="181"
+              fill="#7a8099"
+              font-size="12"
+              font-family="sans-serif"
+            >
+              Kirim pesan...
+            </text>
+          </svg>
+        </div>
+
+        <div class="info-box tip">
+          <div class="info-box-icon">💡</div>
+          <div class="info-box-text">
+            <strong>Apa itu Discord?</strong>
+            Discord adalah aplikasi komunikasi seperti grup WhatsApp/Telegram,
+            namun jauh lebih lengkap. Semua bahan video, aturan campaign, dan
+            laporan penghasilan ada di sini — ini adalah "Kantor Pusat"
+            MotionKlip.
           </div>
         </div>
-        <div class="step">
-          <div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div>
-          <div class="step-body">
-            <strong>Centang "Show All Channels"</strong>
-            <p>Cari dan centang menu <span class="tag">Show All Channels ✅</span> untuk memunculkan semua channel campaign.</p>
+
+        <div class="card">
+          <div class="card-title">
+            <span class="icon">👁️</span> Cara Aktifkan "Show All Channels"
+          </div>
+          <div class="steps">
+            <div class="step">
+              <div class="step-left">
+                <div class="step-num">1</div>
+                <div class="step-line"></div>
+              </div>
+              <div class="step-body">
+                <strong>Buka Discord & Masuk Server</strong>
+                <p>
+                  Buka aplikasi Discord dan masuk ke server
+                  <span class="tag">Motion Klip</span>.
+                </p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-left">
+                <div class="step-num">2</div>
+                <div class="step-line"></div>
+              </div>
+              <div class="step-body">
+                <strong>Klik Nama Server</strong>
+                <p>
+                  Klik nama server
+                  <span class="tag">Setting Server Motion Klip</span> di pojok
+                  kiri atas.
+                </p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-left">
+                <div class="step-num">3</div>
+                <div class="step-line"></div>
+              </div>
+              <div class="step-body">
+                <strong>Centang "Show All Channels"</strong>
+                <p>
+                  Cari dan centang menu
+                  <span class="tag">Show All Channels ✅</span> untuk
+                  memunculkan semua channel campaign.
+                </p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-left"><div class="step-num">4</div></div>
+              <div class="step-body">
+                <strong>Selesai!</strong>
+                <p>
+                  Semua channel campaign dan informasi kini akan tampil. Selamat
+                  datang di MotionKlip!
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="step">
-          <div class="step-left"><div class="step-num">4</div></div>
-          <div class="step-body">
-            <strong>Selesai!</strong>
-            <p>Semua channel campaign dan informasi kini akan tampil. Selamat datang di MotionKlip!</p>
+
+        <div class="card">
+          <div class="card-title">
+            <span class="icon">🏷️</span> Memasang Tag Discord
+            <span class="tag">WAJIB</span>
+          </div>
+          <p style="color: var(--muted); font-size: 14px; margin-bottom: 16px">
+            Agar terdaftar resmi dan bisa claim reward, akun Discord kamu wajib
+            menggunakan Tag <strong style="color: var(--accent)">MKLP</strong>.
+          </p>
+          <div class="steps">
+            <div class="step">
+              <div class="step-left">
+                <div class="step-num">1</div>
+                <div class="step-line"></div>
+              </div>
+              <div class="step-body">
+                <strong>Buka Profil Akun Discord</strong>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-left">
+                <div class="step-num">2</div>
+                <div class="step-line"></div>
+              </div>
+              <div class="step-body">
+                <strong>Klik "Edit Profile"</strong>
+                <p>Tepat di bawah username kamu.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-left">
+                <div class="step-num">3</div>
+                <div class="step-line"></div>
+              </div>
+              <div class="step-body">
+                <strong>Temukan Setting "Server Tag"</strong>
+                <p>Scroll ke paling bawah hingga menemukan menu Server Tag.</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-left"><div class="step-num">4</div></div>
+              <div class="step-body">
+                <strong
+                  >Pasang Tag:
+                  <span style="color: var(--accent)">MKLP</span></strong
+                >
+                <p>Ketik dan pasang tag dari MotionKlip. Done!</p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <div class="card">
-      <div class="card-title"><span class="icon">🏷️</span> Memasang Tag Discord <span class="tag">WAJIB</span></div>
-      <p style="color:var(--muted);font-size:14px;margin-bottom:16px;">Agar terdaftar resmi dan bisa claim reward, akun Discord kamu wajib menggunakan Tag <strong style="color:var(--accent)">MKLP</strong>.</p>
-      <div class="steps">
-        <div class="step">
-          <div class="step-left"><div class="step-num">1</div><div class="step-line"></div></div>
-          <div class="step-body"><strong>Buka Profil Akun Discord</strong></div>
-        </div>
-        <div class="step">
-          <div class="step-left"><div class="step-num">2</div><div class="step-line"></div></div>
-          <div class="step-body">
-            <strong>Klik "Edit Profile"</strong>
-            <p>Tepat di bawah username kamu.</p>
+      <hr class="divider" />
+
+      <section class="chapter" id="bab2">
+        <div class="chapter-header">
+          <div class="chapter-icon">💰</div>
+          <div class="chapter-meta">
+            <div class="chapter-label">Bab 2</div>
+            <div class="chapter-title">
+              Memahami Penghasilan & Sistem Reward
+            </div>
           </div>
         </div>
-        <div class="step">
-          <div class="step-left"><div class="step-num">3</div><div class="step-line"></div></div>
-          <div class="step-body">
-            <strong>Temukan Setting "Server Tag"</strong>
-            <p>Scroll ke paling bawah hingga menemukan menu Server Tag.</p>
+
+        <div class="illus-wrap">
+          <svg
+            viewBox="0 0 800 160"
+            xmlns="http://www.w3.org/2000/svg"
+            style="background: #13161f"
+          >
+            <rect
+              x="20"
+              y="20"
+              width="760"
+              height="120"
+              rx="12"
+              fill="#1a1e2a"
+              stroke="#252a38"
+              stroke-width="1"
+            />
+            <text
+              x="40"
+              y="48"
+              fill="#7a8099"
+              font-size="11"
+              font-family="monospace"
+              letter-spacing="1"
+            >
+              FORMULA PAYOUT
+            </text>
+            <rect
+              x="40"
+              y="58"
+              width="720"
+              height="52"
+              rx="8"
+              fill="rgba(124,92,252,0.06)"
+              stroke="rgba(124,92,252,0.15)"
+              stroke-width="1"
+            />
+            <text
+              x="400"
+              y="90"
+              text-anchor="middle"
+              fill="#e8eaf0"
+              font-family="monospace"
+              font-size="18"
+              font-weight="bold"
+            >
+              ( Views Valid ÷ 1.000 ) × CPM = Payout
+            </text>
+            <text
+              x="400"
+              y="108"
+              text-anchor="middle"
+              fill="#7a8099"
+              font-family="monospace"
+              font-size="11"
+            >
+              Contoh: ( 15.000 ÷ 1.000 ) × Rp3.000 = Rp45.000
+            </text>
+            <text x="740" y="108" fill="#00d4aa" font-size="22">💸</text>
+          </svg>
+        </div>
+
+        <div class="calc-wrap">
+          <div class="calc-title">🧮 Kalkulator CPM — Hitung Payout-mu</div>
+          <div class="calc-grid">
+            <div class="calc-field">
+              <label>Jumlah Views</label>
+              <input
+                type="number"
+                id="calc-views"
+                placeholder="cth: 15000"
+                oninput="calcPayout()"
+              />
+            </div>
+            <div class="calc-field">
+              <label>CPM (Rp per 1.000 views)</label>
+              <input
+                type="number"
+                id="calc-cpm"
+                placeholder="cth: 3000"
+                oninput="calcPayout()"
+              />
+            </div>
+          </div>
+          <div class="calc-result">
+            <div>
+              <div class="calc-result-label">Estimasi Payout</div>
+            </div>
+            <div class="calc-result-val" id="calc-output">Rp 0</div>
           </div>
         </div>
-        <div class="step">
-          <div class="step-left"><div class="step-num">4</div></div>
-          <div class="step-body">
-            <strong>Pasang Tag: <span style="color:var(--accent)">MKLP</span></strong>
-            <p>Ketik dan pasang tag dari MotionKlip. Done!</p>
+
+        <br />
+
+        <div class="card">
+          <div class="card-title">
+            <span class="icon">🎯</span> Minimal Claim Views
+          </div>
+          <p style="color: var(--muted); font-size: 14px">
+            Setiap campaign punya batas views minimum agar videomu bisa
+            dicairkan. Jika belum mencapai batas tersebut, video tidak bisa
+            di-claim walau punya views.
+          </p>
+          <div class="info-box tip" style="margin-top: 14px; margin-bottom: 0">
+            <div class="info-box-icon">📊</div>
+            <div class="info-box-text">
+              <strong>Contoh Campaign Rucas</strong>
+              Minimal views untuk payout adalah
+              <strong style="color: var(--accent2)">5.000 Views</strong>. Video
+              dengan 4.999 views tidak bisa di-claim.
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
 
-  <hr class="divider" />
+        <br />
 
-  <!-- ─── BAB 2 ─────────────────────────────────────────── -->
-  <section class="chapter" id="bab2">
-    <div class="chapter-header">
-      <div class="chapter-icon">💰</div>
-      <div class="chapter-meta">
-        <div class="chapter-label">Bab 2</div>
-        <div class="chapter-title">Memahami Penghasilan & Sistem Reward</div>
-      </div>
-    </div>
-
-    <!-- CPM Illustration -->
-    <div class="illus-wrap">
-      <svg viewBox="0 0 800 160" xmlns="http://www.w3.org/2000/svg" style="background:#13161f;">
-        <!-- formula box -->
-        <rect x="20" y="20" width="760" height="120" rx="12" fill="#1a1e2a" stroke="#252a38" stroke-width="1"/>
-        <!-- label -->
-        <text x="40" y="48" fill="#7a8099" font-size="11" font-family="monospace" letter-spacing="1">FORMULA PAYOUT</text>
-        <!-- formula -->
-        <rect x="40" y="58" width="720" height="52" rx="8" fill="rgba(124,92,252,0.06)" stroke="rgba(124,92,252,0.15)" stroke-width="1"/>
-        <text x="400" y="90" text-anchor="middle" fill="#e8eaf0" font-family="monospace" font-size="18" font-weight="bold">( Views Valid  ÷  1.000 )  ×  CPM  =  Payout</text>
-        <text x="400" y="108" text-anchor="middle" fill="#7a8099" font-family="monospace" font-size="11">Contoh: ( 15.000 ÷ 1.000 ) × Rp3.000 = Rp45.000</text>
-        <!-- coins animation hint -->
-        <text x="740" y="108" fill="#00d4aa" font-size="22">💸</text>
-      </svg>
-    </div>
-
-    <!-- CPM Calculator -->
-    <div class="calc-wrap">
-      <div class="calc-title">🧮 Kalkulator CPM — Hitung Payout-mu</div>
-      <div class="calc-grid">
-        <div class="calc-field">
-          <label>Jumlah Views</label>
-          <input type="number" id="calc-views" placeholder="cth: 15000" oninput="calcPayout()" />
-        </div>
-        <div class="calc-field">
-          <label>CPM (Rp per 1.000 views)</label>
-          <input type="number" id="calc-cpm" placeholder="cth: 3000" oninput="calcPayout()" />
-        </div>
-      </div>
-      <div class="calc-result">
-        <div>
-          <div class="calc-result-label">Estimasi Payout</div>
-        </div>
-        <div class="calc-result-val" id="calc-output">Rp 0</div>
-      </div>
-    </div>
-
-    <br/>
-
-    <div class="card">
-      <div class="card-title"><span class="icon">🎯</span> Minimal Claim Views</div>
-      <p style="color:var(--muted);font-size:14px;">Setiap campaign punya batas views minimum agar videomu bisa dicairkan. Jika belum mencapai batas tersebut, video tidak bisa di-claim walau punya views.</p>
-      <div class="info-box tip" style="margin-top:14px;margin-bottom:0;">
-        <div class="info-box-icon">📊</div>
-        <div class="info-box-text">
-          <strong>Contoh Campaign Rucas</strong>
-          Minimal views untuk payout adalah <strong style="color:var(--accent2)">5.000 Views</strong>. Video dengan 4.999 views tidak bisa di-claim.
-        </div>
-      </div>
-    </div>
-
-    <br/>
-
-    <div style="margin-bottom:14px;">
-      <div class="chapter-label" style="margin-bottom:12px;">3 Jenis Sistem Reward</div>
-    </div>
-    <div class="reward-grid">
-      <div class="reward-card">
-        <div class="reward-card-icon">📦</div>
-        <div class="reward-card-name">Sistem Akumulasi</div>
-        <div class="reward-card-desc">Total views dari beberapa videomu bisa digabung untuk mencapai batas minimal payout.</div>
-      </div>
-      <div class="reward-card">
-        <div class="reward-card-icon">🎬</div>
-        <div class="reward-card-name">Sistem Per Video</div>
-        <div class="reward-card-desc">Setiap video berdiri sendiri. Tiap video harus tembus batas minimal untuk bisa di-claim.</div>
-      </div>
-      <div class="reward-card">
-        <div class="reward-card-icon">🏆</div>
-        <div class="reward-card-name">Sistem Ranking</div>
-        <div class="reward-card-desc">Reward diberikan berdasarkan peringkat. Views tertinggi di akhir periode mendapat hadiah terbesar.</div>
-      </div>
-    </div>
-  </section>
-
-  <hr class="divider" />
-
-  <!-- ─── BAB 3 ─────────────────────────────────────────── -->
-  <section class="chapter" id="bab3">
-    <div class="chapter-header">
-      <div class="chapter-icon">🎬</div>
-      <div class="chapter-meta">
-        <div class="chapter-label">Bab 3</div>
-        <div class="chapter-title">Eksekusi Campaign (Membaca Rules)</div>
-      </div>
-    </div>
-
-    <!-- Campaign flow illustration -->
-    <div class="illus-wrap">
-      <svg viewBox="0 0 800 120" xmlns="http://www.w3.org/2000/svg" style="background:#13161f;">
-        <defs>
-          <linearGradient id="flowLine" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#7c5cfc"/>
-            <stop offset="100%" stop-color="#00d4aa"/>
-          </linearGradient>
-        </defs>
-        <!-- steps -->
-        <g>
-          <!-- step 1 -->
-          <rect x="20" y="30" width="120" height="60" rx="10" fill="#1a1e2a" stroke="#252a38" stroke-width="1"/>
-          <text x="80" y="58" text-anchor="middle" fill="#e8eaf0" font-size="20">📥</text>
-          <text x="80" y="78" text-anchor="middle" fill="#7a8099" font-size="11" font-family="sans-serif">Download Bahan</text>
-          <!-- arrow -->
-          <line x1="140" y1="60" x2="185" y2="60" stroke="url(#flowLine)" stroke-width="2" stroke-dasharray="4,2"/>
-          <polygon points="185,55 195,60 185,65" fill="#7c5cfc"/>
-          <!-- step 2 -->
-          <rect x="195" y="30" width="120" height="60" rx="10" fill="#1a1e2a" stroke="#252a38" stroke-width="1"/>
-          <text x="255" y="58" text-anchor="middle" fill="#e8eaf0" font-size="20">✂️</text>
-          <text x="255" y="78" text-anchor="middle" fill="#7a8099" font-size="11" font-family="sans-serif">Edit + Watermark</text>
-          <!-- arrow -->
-          <line x1="315" y1="60" x2="360" y2="60" stroke="url(#flowLine)" stroke-width="2" stroke-dasharray="4,2"/>
-          <polygon points="360,55 370,60 360,65" fill="#7c5cfc"/>
-          <!-- step 3 -->
-          <rect x="370" y="30" width="120" height="60" rx="10" fill="#1a1e2a" stroke="#252a38" stroke-width="1"/>
-          <text x="430" y="58" text-anchor="middle" fill="#e8eaf0" font-size="20">📲</text>
-          <text x="430" y="78" text-anchor="middle" fill="#7a8099" font-size="11" font-family="sans-serif">Upload + Hashtag</text>
-          <!-- arrow -->
-          <line x1="490" y1="60" x2="535" y2="60" stroke="url(#flowLine)" stroke-width="2" stroke-dasharray="4,2"/>
-          <polygon points="535,55 545,60 535,65" fill="#00d4aa"/>
-          <!-- step 4 -->
-          <rect x="545" y="30" width="120" height="60" rx="10" fill="rgba(0,212,170,0.08)" stroke="rgba(0,212,170,0.3)" stroke-width="1"/>
-          <text x="605" y="58" text-anchor="middle" fill="#e8eaf0" font-size="20">💸</text>
-          <text x="605" y="78" text-anchor="middle" fill="#00d4aa" font-size="11" font-family="sans-serif" font-weight="600">Claim Payout!</text>
-          <!-- deco -->
-          <text x="700" y="70" fill="#7a8099" font-size="13" font-family="monospace">🚀</text>
-        </g>
-      </svg>
-    </div>
-
-    <div class="card">
-      <div class="card-title"><span class="icon">🖼️</span> Download Watermark <span class="tag">WAJIB</span></div>
-      <p style="color:var(--muted);font-size:14px;">Semua video yang kamu upload harus menggunakan <strong style="color:var(--text)">Watermark Text</strong> & <strong style="color:var(--text)">Watermark Logo</strong> dari MotionKlip. Link template disediakan di pengumuman campaign.</p>
-      <div class="info-box warn" style="margin-top:14px;margin-bottom:0;">
-        <div class="info-box-icon">⚠️</div>
-        <div class="info-box-text">Tanpa watermark, video <strong style="color:var(--warn)">tidak akan dihitung</strong> meskipun views-nya sudah tinggi!</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title"><span class="icon">📋</span> Content Brief & Angle</div>
-      <p style="color:var(--muted);font-size:14px;margin-bottom:16px;">Content brief adalah arahan ide konten agar videomu disukai penonton dan sesuai keinginan brand.</p>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div class="rule-item">
-          <div class="rule-x" style="background:rgba(0,212,170,0.12);border-color:rgba(0,212,170,0.3);color:var(--accent2);">📁</div>
-          <div class="rule-text"><strong style="color:var(--text);display:block;margin-bottom:2px;">Bahan Video/Foto</strong>Cek link Google Drive di Discord untuk mengambil bahan mentah campaign.</div>
-        </div>
-        <div class="rule-item">
-          <div class="rule-x" style="background:rgba(124,92,252,0.12);border-color:rgba(124,92,252,0.3);color:var(--accent);">🎯</div>
-          <div class="rule-text"><strong style="color:var(--text);display:block;margin-bottom:2px;">Angle Konten</strong>Gunakan panduan ide yang diberikan sebagai referensi. Bebas dan kreatif, fokus memancing interaksi penonton.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title"><span class="icon">#️⃣</span> Hashtag & Mention</div>
-      <p style="color:var(--muted);font-size:14px;">Ini krusial agar views-mu terlacak oleh sistem!</p>
-      <div class="hashtag-box">
-        # Wajib menggunakan hashtag sesuai brief campaign yang diikuti<br/>
-        @ Tag akun TikTok resmi brand (contoh: @Rucas.Official)
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title"><span class="icon">🚫</span> Rules Content — DILARANG KERAS</div>
-      <p style="color:var(--muted);font-size:14px;margin-bottom:16px;">Jika melanggar, video kamu akan <strong style="color:var(--warn)">hangus dan tidak dibayar</strong>.</p>
-      <div class="rules-list">
-        <div class="rule-item">
-          <div class="rule-x">✕</div>
-          <div class="rule-text">Menyudutkan brand lain dengan narasi negatif</div>
-        </div>
-        <div class="rule-item">
-          <div class="rule-x">✕</div>
-          <div class="rule-text">Menggunakan unsur SARA, menghina, atau isu sensitif</div>
-        </div>
-        <div class="rule-item">
-          <div class="rule-x">✕</div>
-          <div class="rule-text">Mencuri / re-upload karya clipper lain</div>
-        </div>
-        <div class="rule-item">
-          <div class="rule-x">✕</div>
-          <div class="rule-text">Memakai bot views, beli views, atau ads — traffic harus <strong style="color:var(--text)">100% organik murni</strong></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <hr class="divider" />
-
-  <!-- ─── BAB 4 ─────────────────────────────────────────── -->
-  <section class="chapter" id="bab4">
-    <div class="chapter-header">
-      <div class="chapter-icon">💸</div>
-      <div class="chapter-meta">
-        <div class="chapter-label">Bab 4</div>
-        <div class="chapter-title">Cara Claim Rewards</div>
-      </div>
-    </div>
-
-    <div class="info-box tip" style="margin-bottom:24px;">
-      <div class="info-box-icon">🎉</div>
-      <div class="info-box-text">
-        <strong>Selamat! Views-mu sudah tembus!</strong>
-        Ikuti langkah di bawah untuk mengambil hakmu. Pastikan semua syarat terpenuhi sebelum submit form.
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="timeline">
-        <div class="tl-item">
-          <div class="tl-left">
-            <div class="tl-dot">✅</div>
-            <div class="tl-connector"></div>
-          </div>
-          <div class="tl-body">
-            <h4>Pastikan Video Valid</h4>
-            <p>Cek watermark ✓, hashtag benar ✓, tag Discord pakai MKLP ✓, views organik ✓</p>
+        <div style="margin-bottom: 14px">
+          <div class="chapter-label" style="margin-bottom: 12px">
+            3 Jenis Sistem Reward
           </div>
         </div>
-        <div class="tl-item">
-          <div class="tl-left">
-            <div class="tl-dot">📊</div>
-            <div class="tl-connector"></div>
+        <div class="reward-grid">
+          <div class="reward-card">
+            <div class="reward-card-icon">📦</div>
+            <div class="reward-card-name">Sistem Akumulasi</div>
+            <div class="reward-card-desc">
+              Total views dari beberapa videomu bisa digabung untuk mencapai
+              batas minimal payout.
+            </div>
           </div>
-          <div class="tl-body">
-            <h4>Perhatikan Batas Maksimal Claim</h4>
-            <p>Campaign biasanya punya batas maksimal (contoh: maks 1 Juta views per video). Views di atas batas tidak dihitung.</p>
+          <div class="reward-card">
+            <div class="reward-card-icon">🎬</div>
+            <div class="reward-card-name">Sistem Per Video</div>
+            <div class="reward-card-desc">
+              Setiap video berdiri sendiri. Tiap video harus tembus batas
+              minimal untuk bisa di-claim.
+            </div>
           </div>
-        </div>
-        <div class="tl-item">
-          <div class="tl-left">
-            <div class="tl-dot">💬</div>
-            <div class="tl-connector"></div>
-          </div>
-          <div class="tl-body">
-            <h4>Masuk ke Channel Claim</h4>
-            <p>Di Discord, cari channel khusus setor video, misalnya <span class="tag">💸┃claim-reward-campaign</span>.</p>
-          </div>
-        </div>
-        <div class="tl-item">
-          <div class="tl-left">
-            <div class="tl-dot">📝</div>
-            <div class="tl-connector"></div>
-          </div>
-          <div class="tl-body">
-            <h4>Isi Form / Link Claim</h4>
-            <p>Klik <strong style="color:var(--accent)">LINK CLAIM REWARD</strong> dari admin. Isi: data diri, link video TikTok, jumlah views, dan nomor e-wallet (GoPay/DANA).</p>
+          <div class="reward-card">
+            <div class="reward-card-icon">🏆</div>
+            <div class="reward-card-name">Sistem Ranking</div>
+            <div class="reward-card-desc">
+              Reward diberikan berdasarkan peringkat. Views tertinggi di akhir
+              periode mendapat hadiah terbesar.
+            </div>
           </div>
         </div>
-        <div class="tl-item">
-          <div class="tl-left">
-            <div class="tl-dot">⏳</div>
-          </div>
-          <div class="tl-body">
-            <h4>Tunggu Verifikasi</h4>
-            <p>Tim akan mengecek videomu. Ingat: video yang sudah di-claim <strong style="color:var(--warn)">tidak bisa di-claim ulang</strong> meski views bertambah setelah kamu submit form.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+      </section>
 
-  <hr class="divider" />
+      <hr class="divider" />
 
-  <!-- ─── BAB 5 ─────────────────────────────────────────── -->
-  <section class="chapter" id="bab5">
-    <div class="chapter-header">
-      <div class="chapter-icon">⚡</div>
-      <div class="chapter-meta">
-        <div class="chapter-label">Bab 5</div>
-        <div class="chapter-title">Tips Pro Clipper — Algoritma, Editing & Growth</div>
-      </div>
-    </div>
-
-    <div class="info-box tip" style="margin-bottom:28px;">
-      <div class="info-box-icon">🔥</div>
-      <div class="info-box-text">
-        <strong>Kenapa ini penting?</strong>
-        Views organik bukan soal keberuntungan — ada pola yang bisa dipelajari. Clipper yang paham algoritma, editing hook, dan jam upload bisa menghasilkan 3–5× lebih banyak views dari video yang sama.
-      </div>
-    </div>
-
-    <!-- ALGORITMA -->
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-title"><span class="icon">🤖</span> Cara Kerja Algoritma TikTok</div>
-      <p style="color:var(--muted);font-size:14px;margin-bottom:18px;">TikTok mendistribusikan videomu dalam beberapa gelombang. Setiap gelombang menentukan apakah video layak naik ke audiens yang lebih besar.</p>
-
-      <!-- funnel illustration -->
-      <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;margin-bottom:18px;border-radius:10px;background:#0c0e14;">
-        <defs>
-          <linearGradient id="funnelGrad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#7c5cfc"/>
-            <stop offset="100%" stop-color="#00d4aa"/>
-          </linearGradient>
-        </defs>
-        <!-- wave 1 -->
-        <rect x="20" y="20" width="150" height="70" rx="10" fill="rgba(124,92,252,0.12)" stroke="rgba(124,92,252,0.3)" stroke-width="1.5"/>
-        <text x="95" y="48" text-anchor="middle" fill="#e8eaf0" font-size="20">👥</text>
-        <text x="95" y="66" text-anchor="middle" fill="#7a8099" font-size="10" font-family="sans-serif">Gelombang 1</text>
-        <text x="95" y="80" text-anchor="middle" fill="#7c5cfc" font-size="11" font-family="monospace" font-weight="700">200–500 views</text>
-        <!-- arrow -->
-        <text x="185" y="60" fill="#7a8099" font-size="18">→</text>
-        <!-- wave 2 -->
-        <rect x="205" y="20" width="150" height="70" rx="10" fill="rgba(124,92,252,0.18)" stroke="rgba(124,92,252,0.4)" stroke-width="1.5"/>
-        <text x="280" y="48" text-anchor="middle" fill="#e8eaf0" font-size="20">📈</text>
-        <text x="280" y="66" text-anchor="middle" fill="#7a8099" font-size="10" font-family="sans-serif">Gelombang 2</text>
-        <text x="280" y="80" text-anchor="middle" fill="#7c5cfc" font-size="11" font-family="monospace" font-weight="700">1K–5K views</text>
-        <!-- arrow -->
-        <text x="370" y="60" fill="#7a8099" font-size="18">→</text>
-        <!-- wave 3 -->
-        <rect x="390" y="20" width="150" height="70" rx="10" fill="rgba(0,212,170,0.12)" stroke="rgba(0,212,170,0.35)" stroke-width="1.5"/>
-        <text x="465" y="48" text-anchor="middle" fill="#e8eaf0" font-size="20">🚀</text>
-        <text x="465" y="66" text-anchor="middle" fill="#7a8099" font-size="10" font-family="sans-serif">Gelombang 3+</text>
-        <text x="465" y="80" text-anchor="middle" fill="#00d4aa" font-size="11" font-family="monospace" font-weight="700">10K–∞ views</text>
-        <!-- arrow -->
-        <text x="555" y="60" fill="#7a8099" font-size="18">→</text>
-        <!-- viral -->
-        <rect x="575" y="28" width="105" height="54" rx="10" fill="rgba(0,212,170,0.18)" stroke="rgba(0,212,170,0.5)" stroke-width="1.5"/>
-        <text x="627" y="52" text-anchor="middle" fill="#00d4aa" font-size="22">💥</text>
-        <text x="627" y="70" text-anchor="middle" fill="#00d4aa" font-size="10" font-family="sans-serif" font-weight="700">VIRAL!</text>
-        <!-- metric labels -->
-        <text x="20" y="115" fill="#7a8099" font-size="10" font-family="sans-serif">Metrik yang dinilai algoritma di tiap gelombang:</text>
-        <rect x="20" y="124" width="155" height="58" rx="8" fill="#1a1e2a" stroke="#252a38" stroke-width="1"/>
-        <text x="32" y="142" fill="#e8eaf0" font-size="11" font-family="sans-serif">⏱ Watch Time (tonton sampai habis)</text>
-        <text x="32" y="158" fill="#e8eaf0" font-size="11" font-family="sans-serif">❤️ Like, Comment, Share</text>
-        <text x="32" y="174" fill="#e8eaf0" font-size="11" font-family="sans-serif">🔁 Replay (tonton ulang)</text>
-        <rect x="185" y="124" width="155" height="58" rx="8" fill="#1a1e2a" stroke="#252a38" stroke-width="1"/>
-        <text x="197" y="142" fill="#e8eaf0" font-size="11" font-family="sans-serif">📌 Save / Bookmark</text>
-        <text x="197" y="158" fill="#e8eaf0" font-size="11" font-family="sans-serif">🔗 Profil dikunjungi</text>
-        <text x="197" y="174" fill="#e8eaf0" font-size="11" font-family="sans-serif">💬 Komentar panjang</text>
-        <rect x="350" y="124" width="330" height="58" rx="8" fill="rgba(124,92,252,0.06)" stroke="rgba(124,92,252,0.2)" stroke-width="1"/>
-        <text x="362" y="142" fill="#7c5cfc" font-size="11" font-family="sans-serif" font-weight="600">💡 Tips: Jika gelombang 1 sepi, coba posting ulang</text>
-        <text x="362" y="158" fill="#7a8099" font-size="11" font-family="sans-serif">videomu di waktu berbeda. Algoritma bisa push</text>
-        <text x="362" y="174" fill="#7a8099" font-size="11" font-family="sans-serif">video lama jika engagement-nya tiba-tiba naik.</text>
-      </svg>
-    </div>
-
-    <!-- EDITING HOOK -->
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-title"><span class="icon">✂️</span> Teknik Editing yang Bikin Views Meledak</div>
-      <p style="color:var(--muted);font-size:14px;margin-bottom:16px;">3 detik pertama adalah penentu. Jika penonton tidak tertahan di detik ke-3, video-mu di-skip dan algoritma tidak akan push lebih jauh.</p>
-
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div class="rule-item" style="border-color:rgba(124,92,252,0.25);background:rgba(124,92,252,0.04);">
-          <div class="rule-x" style="background:rgba(124,92,252,0.15);border-color:rgba(124,92,252,0.3);color:var(--accent);font-size:14px;">1</div>
-          <div class="rule-text">
-            <strong style="color:var(--text);display:block;margin-bottom:3px;">🎣 Hook Kuat di 0–3 Detik</strong>
-            Mulai langsung dengan momen paling menarik atau pertanyaan yang bikin penasaran. Jangan pakai intro panjang. Contoh: langsung potong ke puncak momen, bukan dari awal cerita.
+      <section class="chapter" id="bab3">
+        <div class="chapter-header">
+          <div class="chapter-icon">🎬</div>
+          <div class="chapter-meta">
+            <div class="chapter-label">Bab 3</div>
+            <div class="chapter-title">Eksekusi Campaign (Membaca Rules)</div>
           </div>
         </div>
-        <div class="rule-item" style="border-color:rgba(124,92,252,0.25);background:rgba(124,92,252,0.04);">
-          <div class="rule-x" style="background:rgba(124,92,252,0.15);border-color:rgba(124,92,252,0.3);color:var(--accent);font-size:14px;">2</div>
-          <div class="rule-text">
-            <strong style="color:var(--text);display:block;margin-bottom:3px;">📝 Tambah Teks/Subtitle di Video</strong>
-            80% penonton TikTok menonton tanpa suara. Subtitle atau teks overlay wajib ada agar pesan tersampaikan dan watch time meningkat.
-          </div>
-        </div>
-        <div class="rule-item" style="border-color:rgba(124,92,252,0.25);background:rgba(124,92,252,0.04);">
-          <div class="rule-x" style="background:rgba(124,92,252,0.15);border-color:rgba(124,92,252,0.3);color:var(--accent);font-size:14px;">3</div>
-          <div class="rule-text">
-            <strong style="color:var(--text);display:block;margin-bottom:3px;">⚡ Jump Cut & Pace Cepat</strong>
-            Hapus jeda, keheningan, atau bagian membosankan. Gunakan jump cut agar video terasa dinamis. Durasi ideal clipper: <span class="tag">15–60 detik</span>.
-          </div>
-        </div>
-        <div class="rule-item" style="border-color:rgba(124,92,252,0.25);background:rgba(124,92,252,0.04);">
-          <div class="rule-x" style="background:rgba(124,92,252,0.15);border-color:rgba(124,92,252,0.3);color:var(--accent);font-size:14px;">4</div>
-          <div class="rule-text">
-            <strong style="color:var(--text);display:block;margin-bottom:3px;">🎵 Pilih Audio yang Trending</strong>
-            Gunakan sound/musik yang sedang trending di FYP. TikTok cenderung push video yang pakai audio populer ke lebih banyak orang.
-          </div>
-        </div>
-        <div class="rule-item" style="border-color:rgba(0,212,170,0.2);background:rgba(0,212,170,0.04);">
-          <div class="rule-x" style="background:rgba(0,212,170,0.12);border-color:rgba(0,212,170,0.3);color:var(--accent2);font-size:14px;">5</div>
-          <div class="rule-text">
-            <strong style="color:var(--text);display:block;margin-bottom:3px;">🔁 Dorong Penonton Tonton Ulang</strong>
-            Buat ending yang "looping" — video berakhir dan penonton ingin tonton ulang dari awal. Ini meningkatkan replay rate yang sangat disukai algoritma.
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- JAM UPLOAD -->
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-title"><span class="icon">🕐</span> Jam Upload Terbaik (WIB)</div>
-      <p style="color:var(--muted);font-size:14px;margin-bottom:18px;">Upload saat audiens target sedang aktif scroll TikTok. Berikut pola umum jam terbaik untuk konten berbahasa Indonesia:</p>
+        <div class="illus-wrap">
+          <svg
+            viewBox="0 0 800 120"
+            xmlns="http://www.w3.org/2000/svg"
+            style="background: #13161f"
+          >
+            <defs>
+              <linearGradient id="flowLine" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#7c5cfc" />
+                <stop offset="100%" stop-color="#00d4aa" />
+              </linearGradient>
+            </defs>
+            <g>
+              <rect
+                x="20"
+                y="30"
+                width="120"
+                height="60"
+                rx="10"
+                fill="#1a1e2a"
+                stroke="#252a38"
+                stroke-width="1"
+              />
+              <text
+                x="80"
+                y="58"
+                text-anchor="middle"
+                fill="#e8eaf0"
+                font-size="20"
+              >
+                📥
+              </text>
+              <text
+                x="80"
+                y="78"
+                text-anchor="middle"
+                fill="#7a8099"
+                font-size="11"
+                font-family="sans-serif"
+              >
+                Download Bahan
+              </text>
+              <line
+                x1="140"
+                y1="60"
+                x2="185"
+                y2="60"
+                stroke="url(#flowLine)"
+                stroke-width="2"
+                stroke-dasharray="4,2"
+              />
+              <polygon points="185,55 195,60 185,65" fill="#7c5cfc" />
+              <rect
+                x="195"
+                y="30"
+                width="120"
+                height="60"
+                rx="10"
+                fill="#1a1e2a"
+                stroke="#252a38"
+                stroke-width="1"
+              />
+              <text
+                x="255"
+                y="58"
+                text-anchor="middle"
+                fill="#e8eaf0"
+                font-size="20"
+              >
+                ✂️
+              </text>
+              <text
+                x="255"
+                y="78"
+                text-anchor="middle"
+                fill="#7a8099"
+                font-size="11"
+                font-family="sans-serif"
+              >
+                Edit + Watermark
+              </text>
+              <line
+                x1="315"
+                y1="60"
+                x2="360"
+                y2="60"
+                stroke="url(#flowLine)"
+                stroke-width="2"
+                stroke-dasharray="4,2"
+              />
+              <polygon points="360,55 370,60 360,65" fill="#7c5cfc" />
+              <rect
+                x="370"
+                y="30"
+                width="120"
+                height="60"
+                rx="10"
+                fill="#1a1e2a"
+                stroke="#252a38"
+                stroke-width="1"
+              />
+              <text
+                x="430"
+                y="58"
+                text-anchor="middle"
+                fill="#e8eaf0"
+                font-size="20"
+              >
+                📲
+              </text>
+              <text
+                x="430"
+                y="78"
+                text-anchor="middle"
+                fill="#7a8099"
+                font-size="11"
+                font-family="sans-serif"
+              >
+                Upload + Hashtag
+              </text>
+              <line
+                x1="490"
+                y1="60"
+                x2="535"
+                y2="60"
+                stroke="url(#flowLine)"
+                stroke-width="2"
+                stroke-dasharray="4,2"
+              />
+              <polygon points="535,55 545,60 535,65" fill="#00d4aa" />
+              <rect
+                x="545"
+                y="30"
+                width="120"
+                height="60"
+                rx="10"
+                fill="rgba(0,212,170,0.08)"
+                stroke="rgba(0,212,170,0.3)"
+                stroke-width="1"
+              />
+              <text
+                x="605"
+                y="58"
+                text-anchor="middle"
+                fill="#e8eaf0"
+                font-size="20"
+              >
+                💸
+              </text>
+              <text
+                x="605"
+                y="78"
+                text-anchor="middle"
+                fill="#00d4aa"
+                font-size="11"
+                font-family="sans-serif"
+                font-weight="600"
+              >
+                Claim Payout!
+              </text>
+              <text
+                x="700"
+                y="70"
+                fill="#7a8099"
+                font-size="13"
+                font-family="monospace"
+              >
+                🚀
+              </text>
+            </g>
+          </svg>
+        </div>
 
-      <!-- time chart -->
-      <svg viewBox="0 0 680 180" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;border-radius:10px;background:#0c0e14;margin-bottom:14px;">
-        <defs>
-          <linearGradient id="barGrad1" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#7c5cfc"/>
-            <stop offset="100%" stop-color="rgba(124,92,252,0.2)"/>
-          </linearGradient>
-          <linearGradient id="barGrad2" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#00d4aa"/>
-            <stop offset="100%" stop-color="rgba(0,212,170,0.2)"/>
-          </linearGradient>
-          <linearGradient id="barGrad3" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#ffd166"/>
-            <stop offset="100%" stop-color="rgba(255,209,102,0.2)"/>
-          </linearGradient>
-        </defs>
-        <!-- Y axis label -->
-        <text x="12" y="20" fill="#7a8099" font-size="9" font-family="sans-serif">Tingkat Aktivitas Penonton</text>
-        <!-- bars -->
-        <!-- 06.00 - rendah -->
-        <rect x="40" y="120" width="40" height="30" rx="5" fill="rgba(124,92,252,0.2)" stroke="rgba(124,92,252,0.3)" stroke-width="1"/>
-        <text x="60" y="165" text-anchor="middle" fill="#7a8099" font-size="10" font-family="sans-serif">06.00</text>
-        <text x="60" y="115" text-anchor="middle" fill="#7a8099" font-size="9" font-family="sans-serif">Rendah</text>
-        <!-- 11.00 - sedang -->
-        <rect x="105" y="90" width="40" height="60" rx="5" fill="url(#barGrad3)" stroke="rgba(255,209,102,0.4)" stroke-width="1"/>
-        <text x="125" y="165" text-anchor="middle" fill="#7a8099" font-size="10" font-family="sans-serif">11.00</text>
-        <text x="125" y="85" text-anchor="middle" fill="#ffd166" font-size="9" font-family="sans-serif">Sedang</text>
-        <!-- 13.00 - tinggi -->
-        <rect x="170" y="55" width="40" height="95" rx="5" fill="url(#barGrad2)" stroke="rgba(0,212,170,0.5)" stroke-width="1.5"/>
-        <text x="190" y="165" text-anchor="middle" fill="#e8eaf0" font-size="10" font-family="sans-serif" font-weight="600">13.00</text>
-        <text x="190" y="50" text-anchor="middle" fill="#00d4aa" font-size="9" font-family="sans-serif" font-weight="700">⭐ Tinggi</text>
-        <!-- 16.00 - sedang -->
-        <rect x="235" y="90" width="40" height="60" rx="5" fill="url(#barGrad3)" stroke="rgba(255,209,102,0.4)" stroke-width="1"/>
-        <text x="255" y="165" text-anchor="middle" fill="#7a8099" font-size="10" font-family="sans-serif">16.00</text>
-        <text x="255" y="85" text-anchor="middle" fill="#ffd166" font-size="9" font-family="sans-serif">Sedang</text>
-        <!-- 19.00 - puncak -->
-        <rect x="300" y="25" width="40" height="125" rx="5" fill="url(#barGrad1)" stroke="rgba(124,92,252,0.6)" stroke-width="1.5"/>
-        <text x="320" y="165" text-anchor="middle" fill="#e8eaf0" font-size="10" font-family="sans-serif" font-weight="600">19.00</text>
-        <text x="320" y="20" text-anchor="middle" fill="#7c5cfc" font-size="9" font-family="sans-serif" font-weight="700">🔥 PUNCAK</text>
-        <!-- 21.00 - puncak -->
-        <rect x="365" y="30" width="40" height="120" rx="5" fill="url(#barGrad1)" stroke="rgba(124,92,252,0.6)" stroke-width="1.5"/>
-        <text x="385" y="165" text-anchor="middle" fill="#e8eaf0" font-size="10" font-family="sans-serif" font-weight="600">21.00</text>
-        <text x="385" y="25" text-anchor="middle" fill="#7c5cfc" font-size="9" font-family="sans-serif" font-weight="700">🔥 PUNCAK</text>
-        <!-- 23.00 - tinggi -->
-        <rect x="430" y="55" width="40" height="95" rx="5" fill="url(#barGrad2)" stroke="rgba(0,212,170,0.5)" stroke-width="1.5"/>
-        <text x="450" y="165" text-anchor="middle" fill="#e8eaf0" font-size="10" font-family="sans-serif" font-weight="600">23.00</text>
-        <text x="450" y="50" text-anchor="middle" fill="#00d4aa" font-size="9" font-family="sans-serif" font-weight="700">⭐ Tinggi</text>
-        <!-- 01.00 - rendah -->
-        <rect x="495" y="125" width="40" height="25" rx="5" fill="rgba(124,92,252,0.15)" stroke="rgba(124,92,252,0.2)" stroke-width="1"/>
-        <text x="515" y="165" text-anchor="middle" fill="#7a8099" font-size="10" font-family="sans-serif">01.00</text>
-        <text x="515" y="120" text-anchor="middle" fill="#7a8099" font-size="9" font-family="sans-serif">Rendah</text>
-        <!-- legend -->
-        <rect x="570" y="50" width="12" height="12" rx="3" fill="#7c5cfc"/>
-        <text x="588" y="61" fill="#7a8099" font-size="10" font-family="sans-serif">Puncak</text>
-        <rect x="570" y="72" width="12" height="12" rx="3" fill="#00d4aa"/>
-        <text x="588" y="83" fill="#7a8099" font-size="10" font-family="sans-serif">Tinggi</text>
-        <rect x="570" y="94" width="12" height="12" rx="3" fill="#ffd166"/>
-        <text x="588" y="105" fill="#7a8099" font-size="10" font-family="sans-serif">Sedang</text>
-        <!-- baseline -->
-        <line x1="30" y1="150" x2="650" y2="150" stroke="#252a38" stroke-width="1"/>
-      </svg>
+        <div class="card">
+          <div class="card-title">
+            <span class="icon">🖼️</span> Download Watermark
+            <span class="tag">WAJIB</span>
+          </div>
+          <p style="color: var(--muted); font-size: 14px">
+            Semua video yang kamu upload harus menggunakan
+            <strong style="color: var(--text)">Watermark Text</strong> &
+            <strong style="color: var(--text)">Watermark Logo</strong> dari
+            MotionKlip. Link template disediakan di pengumuman campaign.
+          </p>
+          <div class="info-box warn" style="margin-top: 14px; margin-bottom: 0">
+            <div class="info-box-icon">⚠️</div>
+            <div class="info-box-text">
+              Tanpa watermark, video
+              <strong style="color: var(--warn)">tidak akan dihitung</strong>
+              meskipun views-nya sudah tinggi!
+            </div>
+          </div>
+        </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div class="info-box tip" style="margin-bottom:0;">
+        <div class="card">
+          <div class="card-title">
+            <span class="icon">📋</span> Content Brief & Angle
+          </div>
+          <p style="color: var(--muted); font-size: 14px; margin-bottom: 16px">
+            Content brief adalah arahan ide konten agar videomu disukai penonton
+            dan sesuai keinginan brand.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <div class="rule-item">
+              <div
+                class="rule-x"
+                style="
+                  background: rgba(0, 212, 170, 0.12);
+                  border-color: rgba(0, 212, 170, 0.3);
+                  color: var(--accent2);
+                "
+              >
+                📁
+              </div>
+              <div class="rule-text">
+                <strong
+                  style="color: var(--text); display: block; margin-bottom: 2px"
+                  >Bahan Video/Foto</strong
+                >Cek link Google Drive di Discord untuk mengambil bahan mentah
+                campaign.
+              </div>
+            </div>
+            <div class="rule-item">
+              <div
+                class="rule-x"
+                style="
+                  background: rgba(124, 92, 252, 0.12);
+                  border-color: rgba(124, 92, 252, 0.3);
+                  color: var(--accent);
+                "
+              >
+                🎯
+              </div>
+              <div class="rule-text">
+                <strong
+                  style="color: var(--text); display: block; margin-bottom: 2px"
+                  >Angle Konten</strong
+                >Gunakan panduan ide yang diberikan sebagai referensi. Bebas dan
+                kreatif, fokus memancing interaksi penonton.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span class="icon">#️⃣</span> Hashtag & Mention
+          </div>
+          <p style="color: var(--muted); font-size: 14px">
+            Ini krusial agar views-mu terlacak oleh sistem!
+          </p>
+          <div class="hashtag-box">
+            # Wajib menggunakan hashtag sesuai brief campaign yang diikuti<br />
+            @ Tag akun TikTok resmi brand jika tertera pada brief (contoh:
+            @Rucas.Official)
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span class="icon">🚫</span> Rules Content — DILARANG KERAS
+          </div>
+          <p style="color: var(--muted); font-size: 14px; margin-bottom: 16px">
+            Jika melanggar, video kamu akan
+            <strong style="color: var(--warn)">hangus dan tidak dibayar</strong
+            >.
+          </p>
+          <div class="rules-list">
+            <div class="rule-item">
+              <div class="rule-x">✕</div>
+              <div class="rule-text">
+                Menyudutkan brand lain dengan narasi negatif
+              </div>
+            </div>
+            <div class="rule-item">
+              <div class="rule-x">✕</div>
+              <div class="rule-text">
+                Menggunakan unsur SARA, menghina, atau isu sensitif
+              </div>
+            </div>
+            <div class="rule-item">
+              <div class="rule-x">✕</div>
+              <div class="rule-text">
+                Mencuri / re-upload karya clipper lain
+              </div>
+            </div>
+            <div class="rule-item">
+              <div class="rule-x">✕</div>
+              <div class="rule-text">
+                Memakai bot views, beli views, atau ads — traffic harus
+                <strong style="color: var(--text)">100% organik murni</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <hr class="divider" />
+
+      <section class="chapter" id="bab4">
+        <div class="chapter-header">
+          <div class="chapter-icon">💸</div>
+          <div class="chapter-meta">
+            <div class="chapter-label">Bab 4</div>
+            <div class="chapter-title">Cara Claim Rewards</div>
+          </div>
+        </div>
+
+        <div class="info-box tip" style="margin-bottom: 24px">
+          <div class="info-box-icon">🎉</div>
+          <div class="info-box-text">
+            <strong>Selamat! Views-mu sudah tembus!</strong>
+            Ikuti langkah di bawah untuk mengambil hakmu. Pastikan semua syarat
+            terpenuhi sebelum submit form.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="timeline">
+            <div class="tl-item">
+              <div class="tl-left">
+                <div class="tl-dot">✅</div>
+                <div class="tl-connector"></div>
+              </div>
+              <div class="tl-body">
+                <h4>Pastikan Video Valid</h4>
+                <p>
+                  Cek watermark ✓, hashtag benar ✓, tag Discord pakai MKLP ✓,
+                  views organik ✓
+                </p>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-left">
+                <div class="tl-dot">📊</div>
+                <div class="tl-connector"></div>
+              </div>
+              <div class="tl-body">
+                <h4>Perhatikan Batas Maksimal Claim</h4>
+                <p>
+                  Campaign biasanya punya batas maksimal (contoh: maks 1 Juta
+                  views per video). Views di atas batas tidak dihitung.
+                </p>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-left">
+                <div class="tl-dot">💬</div>
+                <div class="tl-connector"></div>
+              </div>
+              <div class="tl-body">
+                <h4>Masuk ke Channel Claim</h4>
+                <p>
+                  Di Discord, cari channel khusus setor video, misalnya
+                  <span class="tag">💸┃claim-reward-campaign</span>.
+                </p>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-left">
+                <div class="tl-dot">📝</div>
+                <div class="tl-connector"></div>
+              </div>
+              <div class="tl-body">
+                <h4>Isi Form / Link Claim</h4>
+                <p>
+                  Klik
+                  <strong style="color: var(--accent)"
+                    >LINK CLAIM REWARD</strong
+                  >
+                  dari admin. Isi: data diri, link video TikTok, jumlah views,
+                  dan nomor e-wallet (GoPay/DANA).
+                </p>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-left">
+                <div class="tl-dot">⏳</div>
+              </div>
+              <div class="tl-body">
+                <h4>Tunggu Verifikasi</h4>
+                <p>
+                  Tim akan mengecek videomu. Ingat: video yang sudah di-claim
+                  <strong style="color: var(--warn)"
+                    >tidak bisa di-claim ulang</strong
+                  >
+                  meski views bertambah setelah kamu submit form.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <hr class="divider" />
+
+      <section class="chapter" id="bab5">
+        <div class="chapter-header">
+          <div class="chapter-icon">⚡</div>
+          <div class="chapter-meta">
+            <div class="chapter-label">Bab 5</div>
+            <div class="chapter-title">
+              Tips Pro Clipper — Algoritma, Editing & Growth
+            </div>
+          </div>
+        </div>
+
+        <div class="info-box tip" style="margin-bottom: 28px">
           <div class="info-box-icon">🔥</div>
           <div class="info-box-text">
-            <strong>Prime Time: 19.00–23.00 WIB</strong>
-            Jam orang pulang kerja/sekolah dan rebahan scroll TikTok. Ini adalah golden window untuk upload.
+            <strong>Kenapa ini penting?</strong>
+            Views organik bukan soal keberuntungan — ada pola yang bisa
+            dipelajari. Clipper yang paham algoritma, editing hook, dan jam
+            upload bisa menghasilkan 3–5× lebih banyak views dari video yang
+            sama.
           </div>
         </div>
-        <div class="info-box tip" style="margin-bottom:0;">
-          <div class="info-box-icon">☀️</div>
-          <div class="info-box-text">
-            <strong>Alternatif: 12.00–14.00 WIB</strong>
-            Jam istirahat siang. Cukup ramai dan persaingan lebih rendah dibanding malam.
+
+        <div class="card" style="margin-bottom: 16px">
+          <div class="card-title">
+            <span class="icon">🤖</span> Cara Kerja Algoritma TikTok
+          </div>
+          <p style="color: var(--muted); font-size: 14px; margin-bottom: 18px">
+            TikTok mendistribusikan videomu dalam beberapa gelombang. Setiap
+            gelombang menentukan apakah video layak naik ke audiens yang lebih
+            besar.
+          </p>
+
+          <svg
+            viewBox="0 0 700 200"
+            xmlns="http://www.w3.org/2000/svg"
+            style="
+              display: block;
+              width: 100%;
+              margin-bottom: 18px;
+              border-radius: 10px;
+              background: #0c0e14;
+            "
+          >
+            <defs>
+              <linearGradient id="funnelGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#7c5cfc" />
+                <stop offset="100%" stop-color="#00d4aa" />
+              </linearGradient>
+            </defs>
+            <rect
+              x="20"
+              y="20"
+              width="150"
+              height="70"
+              rx="10"
+              fill="rgba(124,92,252,0.12)"
+              stroke="rgba(124,92,252,0.3)"
+              stroke-width="1.5"
+            />
+            <text
+              x="95"
+              y="48"
+              text-anchor="middle"
+              fill="#e8eaf0"
+              font-size="20"
+            >
+              👥
+            </text>
+            <text
+              x="95"
+              y="66"
+              text-anchor="middle"
+              fill="#7a8099"
+              font-size="10"
+              font-family="sans-serif"
+            >
+              Gelombang 1
+            </text>
+            <text
+              x="95"
+              y="80"
+              text-anchor="middle"
+              fill="#7c5cfc"
+              font-size="11"
+              font-family="monospace"
+              font-weight="700"
+            >
+              200–500 views
+            </text>
+            <text x="185" y="60" fill="#7a8099" font-size="18">→</text>
+            <rect
+              x="205"
+              y="20"
+              width="150"
+              height="70"
+              rx="10"
+              fill="rgba(124,92,252,0.18)"
+              stroke="rgba(124,92,252,0.4)"
+              stroke-width="1.5"
+            />
+            <text
+              x="280"
+              y="48"
+              text-anchor="middle"
+              fill="#e8eaf0"
+              font-size="20"
+            >
+              📈
+            </text>
+            <text
+              x="280"
+              y="66"
+              text-anchor="middle"
+              fill="#7a8099"
+              font-size="10"
+              font-family="sans-serif"
+            >
+              Gelombang 2
+            </text>
+            <text
+              x="280"
+              y="80"
+              text-anchor="middle"
+              fill="#7c5cfc"
+              font-size="11"
+              font-family="monospace"
+              font-weight="700"
+            >
+              1K–5K views
+            </text>
+            <text x="370" y="60" fill="#7a8099" font-size="18">→</text>
+            <rect
+              x="390"
+              y="20"
+              width="150"
+              height="70"
+              rx="10"
+              fill="rgba(0,212,170,0.12)"
+              stroke="rgba(0,212,170,0.35)"
+              stroke-width="1.5"
+            />
+            <text
+              x="465"
+              y="48"
+              text-anchor="middle"
+              fill="#e8eaf0"
+              font-size="20"
+            >
+              🚀
+            </text>
+            <text
+              x="465"
+              y="66"
+              text-anchor="middle"
+              fill="#7a8099"
+              font-size="10"
+              font-family="sans-serif"
+            >
+              Gelombang 3+
+            </text>
+            <text
+              x="465"
+              y="80"
+              text-anchor="middle"
+              fill="#00d4aa"
+              font-size="11"
+              font-family="monospace"
+              font-weight="700"
+            >
+              10K–∞ views
+            </text>
+            <text x="555" y="60" fill="#7a8099" font-size="18">→</text>
+            <rect
+              x="575"
+              y="28"
+              width="105"
+              height="54"
+              rx="10"
+              fill="rgba(0,212,170,0.18)"
+              stroke="rgba(0,212,170,0.5)"
+              stroke-width="1.5"
+            />
+            <text
+              x="627"
+              y="52"
+              text-anchor="middle"
+              fill="#00d4aa"
+              font-size="22"
+            >
+              💥
+            </text>
+            <text
+              x="627"
+              y="70"
+              text-anchor="middle"
+              fill="#00d4aa"
+              font-size="10"
+              font-family="sans-serif"
+              font-weight="700"
+            >
+              VIRAL!
+            </text>
+            <text
+              x="20"
+              y="115"
+              fill="#7a8099"
+              font-size="10"
+              font-family="sans-serif"
+            >
+              Metrik yang dinilai algoritma di tiap gelombang:
+            </text>
+            <rect
+              x="20"
+              y="124"
+              width="155"
+              height="58"
+              rx="8"
+              fill="#1a1e2a"
+              stroke="#252a38"
+              stroke-width="1"
+            />
+            <text
+              x="32"
+              y="142"
+              fill="#e8eaf0"
+              font-size="11"
+              font-family="sans-serif"
+            >
+              ⏱ Watch Time (tonton sampai habis)
+            </text>
+            <text
+              x="32"
+              y="158"
+              fill="#e8eaf0"
+              font-size="11"
+              font-family="sans-serif"
+            >
+              ❤️ Like, Comment, Share
+            </text>
+            <text
+              x="32"
+              y="174"
+              fill="#e8eaf0"
+              font-size="11"
+              font-family="sans-serif"
+            >
+              🔁 Replay (tonton ulang)
+            </text>
+            <rect
+              x="185"
+              y="124"
+              width="155"
+              height="58"
+              rx="8"
+              fill="#1a1e2a"
+              stroke="#252a38"
+              stroke-width="1"
+            />
+            <text
+              x="197"
+              y="142"
+              fill="#e8eaf0"
+              font-size="11"
+              font-family="sans-serif"
+            >
+              📌 Save / Bookmark
+            </text>
+            <text
+              x="197"
+              y="158"
+              fill="#e8eaf0"
+              font-size="11"
+              font-family="sans-serif"
+            >
+              🔗 Profil dikunjungi
+            </text>
+            <text
+              x="197"
+              y="174"
+              fill="#e8eaf0"
+              font-size="11"
+              font-family="sans-serif"
+            >
+              💬 Komentar panjang
+            </text>
+            <rect
+              x="350"
+              y="124"
+              width="330"
+              height="58"
+              rx="8"
+              fill="rgba(124,92,252,0.06)"
+              stroke="rgba(124,92,252,0.2)"
+              stroke-width="1"
+            />
+            <text
+              x="362"
+              y="142"
+              fill="#7c5cfc"
+              font-size="11"
+              font-family="sans-serif"
+              font-weight="600"
+            >
+              💡 Tips: Jika gelombang 1 sepi, coba posting ulang
+            </text>
+            <text
+              x="362"
+              y="158"
+              fill="#7a8099"
+              font-size="11"
+              font-family="sans-serif"
+            >
+              videomu di waktu berbeda. Algoritma bisa push
+            </text>
+            <text
+              x="362"
+              y="174"
+              fill="#7a8099"
+              font-size="11"
+              font-family="sans-serif"
+            >
+              video lama jika engagement-nya tiba-tiba naik.
+            </text>
+          </svg>
+        </div>
+
+        <div class="card" style="margin-bottom: 16px">
+          <div class="card-title">
+            <span class="icon">✂️</span> Teknik Editing yang Bikin Views Meledak
+          </div>
+          <p style="color: var(--muted); font-size: 14px; margin-bottom: 16px">
+            3 detik pertama adalah penentu. Jika penonton tidak tertahan di
+            detik ke-3, video-mu di-skip dan algoritma tidak akan push lebih
+            jauh.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <div
+              class="rule-item"
+              style="
+                border-color: rgba(124, 92, 252, 0.25);
+                background: rgba(124, 92, 252, 0.04);
+              "
+            >
+              <div
+                class="rule-x"
+                style="
+                  background: rgba(124, 92, 252, 0.15);
+                  border-color: rgba(124, 92, 252, 0.3);
+                  color: var(--accent);
+                  font-size: 14px;
+                "
+              >
+                1
+              </div>
+              <div class="rule-text">
+                <strong
+                  style="color: var(--text); display: block; margin-bottom: 3px"
+                  >🎣 Hook Kuat di 0–3 Detik</strong
+                >
+                Mulai langsung dengan momen paling menarik atau pertanyaan yang
+                bikin penasaran. Jangan pakai intro panjang. Contoh: langsung
+                potong ke puncak momen, bukan dari awal cerita.
+              </div>
+            </div>
+            <div
+              class="rule-item"
+              style="
+                border-color: rgba(124, 92, 252, 0.25);
+                background: rgba(124, 92, 252, 0.04);
+              "
+            >
+              <div
+                class="rule-x"
+                style="
+                  background: rgba(124, 92, 252, 0.15);
+                  border-color: rgba(124, 92, 252, 0.3);
+                  color: var(--accent);
+                  font-size: 14px;
+                "
+              >
+                2
+              </div>
+              <div class="rule-text">
+                <strong
+                  style="color: var(--text); display: block; margin-bottom: 3px"
+                  >📝 Tambah Teks/Subtitle di Video</strong
+                >
+                80% penonton TikTok menonton tanpa suara. Subtitle atau teks
+                overlay wajib ada agar pesan tersampaikan dan watch time
+                meningkat.
+              </div>
+            </div>
+            <div
+              class="rule-item"
+              style="
+                border-color: rgba(124, 92, 252, 0.25);
+                background: rgba(124, 92, 252, 0.04);
+              "
+            >
+              <div
+                class="rule-x"
+                style="
+                  background: rgba(124, 92, 252, 0.15);
+                  border-color: rgba(124, 92, 252, 0.3);
+                  color: var(--accent);
+                  font-size: 14px;
+                "
+              >
+                3
+              </div>
+              <div class="rule-text">
+                <strong
+                  style="color: var(--text); display: block; margin-bottom: 3px"
+                  >⚡ Jump Cut & Pace Cepat</strong
+                >
+                Hapus jeda, keheningan, atau bagian membosankan. Gunakan jump
+                cut agar video terasa dinamis. Durasi ideal clipper:
+                <span class="tag">15–60 detik</span>.
+              </div>
+            </div>
+            <div
+              class="rule-item"
+              style="
+                border-color: rgba(124, 92, 252, 0.25);
+                background: rgba(124, 92, 252, 0.04);
+              "
+            >
+              <div
+                class="rule-x"
+                style="
+                  background: rgba(124, 92, 252, 0.15);
+                  border-color: rgba(124, 92, 252, 0.3);
+                  color: var(--accent);
+                  font-size: 14px;
+                "
+              >
+                4
+              </div>
+              <div class="rule-text">
+                <strong
+                  style="color: var(--text); display: block; margin-bottom: 3px"
+                  >🎵 Pilih Audio yang Trending</strong
+                >
+                Gunakan sound/musik yang sedang trending di FYP. TikTok
+                cenderung push video yang pakai audio populer ke lebih banyak
+                orang.
+              </div>
+            </div>
+            <div
+              class="rule-item"
+              style="
+                border-color: rgba(0, 212, 170, 0.2);
+                background: rgba(0, 212, 170, 0.04);
+              "
+            >
+              <div
+                class="rule-x"
+                style="
+                  background: rgba(0, 212, 170, 0.12);
+                  border-color: rgba(0, 212, 170, 0.3);
+                  color: var(--accent2);
+                  font-size: 14px;
+                "
+              >
+                5
+              </div>
+              <div class="rule-text">
+                <strong
+                  style="color: var(--text); display: block; margin-bottom: 3px"
+                  >🔁 Dorong Penonton Tonton Ulang</strong
+                >
+                Buat ending yang "looping" — video berakhir dan penonton ingin
+                tonton ulang dari awal. Ini meningkatkan replay rate yang sangat
+                disukai algoritma.
+              </div>
+            </div>
           </div>
         </div>
+
+        <div class="card" style="margin-bottom: 16px">
+          <div class="card-title">
+            <span class="icon">🕐</span> Jam Upload Terbaik (WIB)
+          </div>
+          <p style="color: var(--muted); font-size: 14px; margin-bottom: 18px">
+            Upload saat audiens target sedang aktif scroll TikTok. Berikut pola
+            umum jam terbaik untuk konten berbahasa Indonesia:
+          </p>
+
+          <svg
+            viewBox="0 0 680 180"
+            xmlns="http://www.w3.org/2000/svg"
+            style="
+              display: block;
+              width: 100%;
+              border-radius: 10px;
+              background: #0c0e14;
+              margin-bottom: 14px;
+            "
+          >
+            <defs>
+              <linearGradient id="barGrad1" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#7c5cfc" />
+                <stop offset="100%" stop-color="rgba(124,92,252,0.2)" />
+              </linearGradient>
+              <linearGradient id="barGrad2" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#00d4aa" />
+                <stop offset="100%" stop-color="rgba(0,212,170,0.2)" />
+              </linearGradient>
+              <linearGradient id="barGrad3" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ffd166" />
+                <stop offset="100%" stop-color="rgba(255,209,102,0.2)" />
+              </linearGradient>
+            </defs>
+            <text
+              x="12"
+              y="20"
+              fill="#7a8099"
+              font-size="9"
+              font-family="sans-serif"
+            >
+              Tingkat Aktivitas Penonton
+            </text>
+            <rect
+              x="40"
+              y="120"
+              width="40"
+              height="30"
+              rx="5"
+              fill="rgba(124,92,252,0.2)"
+              stroke="rgba(124,92,252,0.3)"
+              stroke-width="1"
+            />
+            <text
+              x="60"
+              y="165"
+              text-anchor="middle"
+              fill="#7a8099"
+              font-size="10"
+              font-family="sans-serif"
+            >
+              06.00
+            </text>
+            <text
+              x="60"
+              y="115"
+              text-anchor="middle"
+              fill="#7a8099"
+              font-size="9"
+              font-family="sans-serif"
+            >
+              Rendah
+            </text>
+            <rect
+              x="105"
+              y="90"
+              width="40"
+              height="60"
+              rx="5"
+              fill="url(#barGrad3)"
+              stroke="rgba(255,209,102,0.4)"
+              stroke-width="1"
+            />
+            <text
+              x="125"
+              y="165"
+              text-anchor="middle"
+              fill="#7a8099"
+              font-size="10"
+              font-family="sans-serif"
+            >
+              11.00
+            </text>
+            <text
+              x="125"
+              y="85"
+              text-anchor="middle"
+              fill="#ffd166"
+              font-size="9"
+              font-family="sans-serif"
+            >
+              Sedang
+            </text>
+            <rect
+              x="170"
+              y="55"
+              width="40"
+              height="95"
+              rx="5"
+              fill="url(#barGrad2)"
+              stroke="rgba(0,212,170,0.5)"
+              stroke-width="1.5"
+            />
+            <text
+              x="190"
+              y="165"
+              text-anchor="middle"
+              fill="#e8eaf0"
+              font-size="10"
+              font-family="sans-serif"
+              font-weight="600"
+            >
+              13.00
+            </text>
+            <text
+              x="190"
+              y="50"
+              text-anchor="middle"
+              fill="#00d4aa"
+              font-size="9"
+              font-family="sans-serif"
+              font-weight="700"
+            >
+              ⭐ Tinggi
+            </text>
+            <rect
+              x="235"
+              y="90"
+              width="40"
+              height="60"
+              rx="5"
+              fill="url(#barGrad3)"
+              stroke="rgba(255,209,102,0.4)"
+              stroke-width="1"
+            />
+            <text
+              x="255"
+              y="165"
+              text-anchor="middle"
+              fill="#7a8099"
+              font-size="10"
+              font-family="sans-serif"
+            >
+              16.00
+            </text>
+            <text
+              x="255"
+              y="85"
+              text-anchor="middle"
+              fill="#ffd166"
+              font-size="9"
+              font-family="sans-serif"
+            >
+              Sedang
+            </text>
+            <rect
+              x="300"
+              y="25"
+              width="40"
+              height="125"
+              rx="5"
+              fill="url(#barGrad1)"
+              stroke="rgba(124,92,252,0.6)"
+              stroke-width="1.5"
+            />
+            <text
+              x="320"
+              y="165"
+              text-anchor="middle"
+              fill="#e8eaf0"
+              font-size="10"
+              font-family="sans-serif"
+              font-weight="600"
+            >
+              19.00
+            </text>
+            <text
+              x="320"
+              y="20"
+              text-anchor="middle"
+              fill="#7c5cfc"
+              font-size="9"
+              font-family="sans-serif"
+              font-weight="700"
+            >
+              🔥 PUNCAK
+            </text>
+            <rect
+              x="365"
+              y="30"
+              width="40"
+              height="120"
+              rx="5"
+              fill="url(#barGrad1)"
+              stroke="rgba(124,92,252,0.6)"
+              stroke-width="1.5"
+            />
+            <text
+              x="385"
+              y="165"
+              text-anchor="middle"
+              fill="#e8eaf0"
+              font-size="10"
+              font-family="sans-serif"
+              font-weight="600"
+            >
+              21.00
+            </text>
+            <text
+              x="385"
+              y="25"
+              text-anchor="middle"
+              fill="#7c5cfc"
+              font-size="9"
+              font-family="sans-serif"
+              font-weight="700"
+            >
+              🔥 PUNCAK
+            </text>
+            <rect
+              x="430"
+              y="55"
+              width="40"
+              height="95"
+              rx="5"
+              fill="url(#barGrad2)"
+              stroke="rgba(0,212,170,0.5)"
+              stroke-width="1.5"
+            />
+            <text
+              x="450"
+              y="165"
+              text-anchor="middle"
+              fill="#e8eaf0"
+              font-size="10"
+              font-family="sans-serif"
+              font-weight="600"
+            >
+              23.00
+            </text>
+            <text
+              x="450"
+              y="50"
+              text-anchor="middle"
+              fill="#00d4aa"
+              font-size="9"
+              font-family="sans-serif"
+              font-weight="700"
+            >
+              ⭐ Tinggi
+            </text>
+            <rect
+              x="495"
+              y="125"
+              width="40"
+              height="25"
+              rx="5"
+              fill="rgba(124,92,252,0.15)"
+              stroke="rgba(124,92,252,0.2)"
+              stroke-width="1"
+            />
+            <text
+              x="515"
+              y="165"
+              text-anchor="middle"
+              fill="#7a8099"
+              font-size="10"
+              font-family="sans-serif"
+            >
+              01.00
+            </text>
+            <text
+              x="515"
+              y="120"
+              text-anchor="middle"
+              fill="#7a8099"
+              font-size="9"
+              font-family="sans-serif"
+            >
+              Rendah
+            </text>
+            <rect x="570" y="50" width="12" height="12" rx="3" fill="#7c5cfc" />
+            <text
+              x="588"
+              y="61"
+              fill="#7a8099"
+              font-size="10"
+              font-family="sans-serif"
+            >
+              Puncak
+            </text>
+            <rect x="570" y="72" width="12" height="12" rx="3" fill="#00d4aa" />
+            <text
+              x="588"
+              y="83"
+              fill="#7a8099"
+              font-size="10"
+              font-family="sans-serif"
+            >
+              Tinggi
+            </text>
+            <rect x="570" y="94" width="12" height="12" rx="3" fill="#ffd166" />
+            <text
+              x="588"
+              y="105"
+              fill="#7a8099"
+              font-size="10"
+              font-family="sans-serif"
+            >
+              Sedang
+            </text>
+            <line
+              x1="30"
+              y1="150"
+              x2="650"
+              y2="150"
+              stroke="#252a38"
+              stroke-width="1"
+            />
+          </svg>
+
+          <div class="responsive-grid-2">
+            <div class="info-box tip" style="margin-bottom: 0">
+              <div class="info-box-icon">🔥</div>
+              <div class="info-box-text">
+                <strong>Prime Time: 19.00–23.00 WIB</strong>
+                Jam orang pulang kerja/sekolah dan rebahan scroll TikTok. Ini
+                adalah golden window untuk upload.
+              </div>
+            </div>
+            <div class="info-box tip" style="margin-bottom: 0">
+              <div class="info-box-icon">☀️</div>
+              <div class="info-box-text">
+                <strong>Alternatif: 12.00–14.00 WIB</strong>
+                Jam istirahat siang. Cukup ramai dan persaingan lebih rendah
+                dibanding malam.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 16px">
+          <div class="card-title">
+            <span class="icon">👻</span> Shadowban — Musuh Terbesar Clipper
+          </div>
+          <p style="color: var(--muted); font-size: 14px; margin-bottom: 16px">
+            <strong style="color: var(--warn)">Shadowban</strong> adalah kondisi
+            dimana TikTok membatasi distribusi videomu secara diam-diam — video
+            tetap ada, tapi nyaris tidak ada yang melihat. Views mandek di angka
+            kecil tanpa alasan jelas.
+          </p>
+
+          <svg
+            viewBox="0 0 680 130"
+            xmlns="http://www.w3.org/2000/svg"
+            style="
+              display: block;
+              width: 100%;
+              border-radius: 10px;
+              background: #0c0e14;
+              margin-bottom: 16px;
+            "
+          >
+            <text
+              x="170"
+              y="20"
+              text-anchor="middle"
+              fill="#00d4aa"
+              font-size="11"
+              font-family="sans-serif"
+              font-weight="700"
+            >
+              ✅ Akun Normal
+            </text>
+            <polyline
+              points="30,100 80,80 130,60 180,40 230,55 280,35"
+              fill="none"
+              stroke="#00d4aa"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <circle cx="280" cy="35" r="5" fill="#00d4aa" />
+            <text
+              x="290"
+              y="38"
+              fill="#00d4aa"
+              font-size="10"
+              font-family="monospace"
+            >
+              📈 FYP
+            </text>
+            <line
+              x1="30"
+              y1="105"
+              x2="300"
+              y2="105"
+              stroke="#252a38"
+              stroke-width="1"
+            />
+            <line
+              x1="30"
+              y1="30"
+              x2="30"
+              y2="105"
+              stroke="#252a38"
+              stroke-width="1"
+            />
+            <text
+              x="160"
+              y="120"
+              text-anchor="middle"
+              fill="#7a8099"
+              font-size="9"
+              font-family="sans-serif"
+            >
+              Waktu →
+            </text>
+            <line
+              x1="340"
+              y1="10"
+              x2="340"
+              y2="120"
+              stroke="#252a38"
+              stroke-width="1"
+              stroke-dasharray="4,3"
+            />
+            <text
+              x="510"
+              y="20"
+              text-anchor="middle"
+              fill="#ff5e5e"
+              font-size="11"
+              font-family="sans-serif"
+              font-weight="700"
+            >
+              ⛔ Kena Shadowban
+            </text>
+            <polyline
+              points="370,80 420,75 470,78 520,76 570,79 620,77"
+              fill="none"
+              stroke="#ff5e5e"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-dasharray="6,3"
+            />
+            <circle cx="620" cy="77" r="5" fill="#ff5e5e" />
+            <text
+              x="500"
+              y="50"
+              text-anchor="middle"
+              fill="#ff5e5e"
+              font-size="10"
+              font-family="sans-serif"
+            >
+              Views nyaris nol, FYP tidak jalan
+            </text>
+            <line
+              x1="370"
+              y1="105"
+              x2="640"
+              y2="105"
+              stroke="#252a38"
+              stroke-width="1"
+            />
+            <line
+              x1="370"
+              y1="30"
+              x2="370"
+              y2="105"
+              stroke="#252a38"
+              stroke-width="1"
+            />
+            <text
+              x="505"
+              y="120"
+              text-anchor="middle"
+              fill="#7a8099"
+              font-size="9"
+              font-family="sans-serif"
+            >
+              Waktu →
+            </text>
+          </svg>
+
+          <div style="margin-bottom: 14px">
+            <div
+              style="
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--text);
+                margin-bottom: 10px;
+              "
+            >
+              ⚠️ Penyebab Shadowban:
+            </div>
+            <div class="rules-list">
+              <div class="rule-item">
+                <div class="rule-x">!</div>
+                <div class="rule-text">
+                  Upload terlalu banyak video dalam waktu singkat (spam upload)
+                </div>
+              </div>
+              <div class="rule-item">
+                <div class="rule-x">!</div>
+                <div class="rule-text">
+                  Video di-report banyak pengguna (konten dianggap melanggar)
+                </div>
+              </div>
+              <div class="rule-item">
+                <div class="rule-x">!</div>
+                <div class="rule-text">
+                  Menggunakan hashtag yang di-banned atau terlalu banyak hashtag
+                  tidak relevan
+                </div>
+              </div>
+              <div class="rule-item">
+                <div class="rule-x">!</div>
+                <div class="rule-text">
+                  Akun baru yang terlalu agresif upload dalam 24 jam pertama
+                </div>
+              </div>
+              <div class="rule-item">
+                <div class="rule-x">!</div>
+                <div class="rule-text">
+                  Menggunakan audio/musik yang terkena copyright strike
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 4px">
+            <div
+              style="
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--text);
+                margin-bottom: 10px;
+              "
+            >
+              ✅ Cara Mengatasi Shadowban:
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <div
+                class="rule-item"
+                style="border-color: rgba(0, 212, 170, 0.2)"
+              >
+                <div
+                  class="rule-x"
+                  style="
+                    background: rgba(0, 212, 170, 0.1);
+                    border-color: rgba(0, 212, 170, 0.3);
+                    color: var(--accent2);
+                  "
+                >
+                  1
+                </div>
+                <div class="rule-text">
+                  Berhenti upload selama
+                  <strong style="color: var(--text)">24–72 jam</strong> dan
+                  jangan hapus video lama.
+                </div>
+              </div>
+              <div
+                class="rule-item"
+                style="border-color: rgba(0, 212, 170, 0.2)"
+              >
+                <div
+                  class="rule-x"
+                  style="
+                    background: rgba(0, 212, 170, 0.1);
+                    border-color: rgba(0, 212, 170, 0.3);
+                    color: var(--accent2);
+                  "
+                >
+                  2
+                </div>
+                <div class="rule-text">
+                  Cek <span class="tag">Creator Tools → Akun</span> apakah ada
+                  notifikasi pelanggaran dari TikTok.
+                </div>
+              </div>
+              <div
+                class="rule-item"
+                style="border-color: rgba(0, 212, 170, 0.2)"
+              >
+                <div
+                  class="rule-x"
+                  style="
+                    background: rgba(0, 212, 170, 0.1);
+                    border-color: rgba(0, 212, 170, 0.3);
+                    color: var(--accent2);
+                  "
+                >
+                  3
+                </div>
+                <div class="rule-text">
+                  Setelah jeda, mulai lagi dengan 1 video berkualitas tinggi —
+                  jangan langsung spam.
+                </div>
+              </div>
+              <div
+                class="rule-item"
+                style="border-color: rgba(0, 212, 170, 0.2)"
+              >
+                <div
+                  class="rule-x"
+                  style="
+                    background: rgba(0, 212, 170, 0.1);
+                    border-color: rgba(0, 212, 170, 0.3);
+                    color: var(--accent2);
+                  "
+                >
+                  4
+                </div>
+                <div class="rule-text">
+                  Aktifkan akun dengan interaksi organik — tonton, like, dan
+                  komen video orang lain selama masa jeda.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span class="icon">📅</span> Konsistensi — Kunci Jangka Panjang
+          </div>
+          <p style="color: var(--muted); font-size: 14px; margin-bottom: 16px">
+            Algoritma TikTok menyukai akun yang aktif secara konsisten.
+            Frekuensi upload yang stabil membangun momentum channel-mu.
+          </p>
+
+          <div class="responsive-grid-3">
+            <div
+              style="
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 16px;
+                text-align: center;
+              "
+            >
+              <div style="font-size: 28px; margin-bottom: 8px">🐌</div>
+              <div
+                style="
+                  font-size: 12px;
+                  font-weight: 600;
+                  color: var(--muted);
+                  margin-bottom: 4px;
+                "
+              >
+                Pemula
+              </div>
+              <div
+                style="font-size: 15px; font-weight: 700; color: var(--accent)"
+              >
+                1–2 video/hari
+              </div>
+              <div
+                style="font-size: 11px; color: var(--muted); margin-top: 4px"
+              >
+                Fokus kualitas dulu
+              </div>
+            </div>
+            <div
+              style="
+                background: rgba(124, 92, 252, 0.06);
+                border: 1px solid rgba(124, 92, 252, 0.25);
+                border-radius: 12px;
+                padding: 16px;
+                text-align: center;
+              "
+            >
+              <div style="font-size: 28px; margin-bottom: 8px">⚡</div>
+              <div
+                style="
+                  font-size: 12px;
+                  font-weight: 600;
+                  color: var(--accent);
+                  margin-bottom: 4px;
+                "
+              >
+                Ideal
+              </div>
+              <div
+                style="font-size: 15px; font-weight: 700; color: var(--accent)"
+              >
+                3–5 video/hari
+              </div>
+              <div
+                style="font-size: 11px; color: var(--muted); margin-top: 4px"
+              >
+                Ritme terbaik
+              </div>
+            </div>
+            <div
+              style="
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 16px;
+                text-align: center;
+              "
+            >
+              <div style="font-size: 28px; margin-bottom: 8px">🚀</div>
+              <div
+                style="
+                  font-size: 12px;
+                  font-weight: 600;
+                  color: var(--accent2);
+                  margin-bottom: 4px;
+                "
+              >
+                Pro
+              </div>
+              <div
+                style="font-size: 15px; font-weight: 700; color: var(--accent2)"
+              >
+                5–10 video/hari
+              </div>
+              <div
+                style="font-size: 11px; color: var(--muted); margin-top: 4px"
+              >
+                Volume tinggi
+              </div>
+            </div>
+          </div>
+
+          <div class="info-box warn" style="margin-top: 14px; margin-bottom: 0">
+            <div class="info-box-icon">⚠️</div>
+            <div class="info-box-text">
+              Jangan upload lebih dari
+              <strong style="color: var(--warn)">10 video dalam 1 jam</strong> —
+              ini sinyal spam ke algoritma TikTok dan bisa memicu shadowban
+              instan.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div
+        style="
+          background: linear-gradient(
+            135deg,
+            rgba(124, 92, 252, 0.12),
+            rgba(0, 212, 170, 0.08)
+          );
+          border: 1px solid rgba(124, 92, 252, 0.25);
+          border-radius: 20px;
+          padding: 40px;
+          text-align: center;
+          margin-bottom: 64px;
+        "
+      >
+        <div style="font-size: 48px; margin-bottom: 16px">🚀</div>
+        <h2
+          style="
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 12px;
+          "
+        >
+          Kamu Sudah Siap 100%!
+        </h2>
+        <p
+          style="
+            color: var(--muted);
+            font-size: 15px;
+            max-width: 480px;
+            margin: 0 auto;
+          "
+        >
+          Selamat! Kamu sudah memahami semua alur dari Discord hingga payout.
+          Tetap semangat, banyak bereksperimen dengan editing, dan salam
+          <strong style="color: var(--accent2)">PAYOUT!</strong>
+        </p>
       </div>
     </div>
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-logo">Motion<span>Klip</span></div>
+        <div class="footer-sub">
+          Modul Panduan Clipper — Dari Nol Sampai Payout
+        </div>
+        <br />
+        <a
+          href="https://www.instagram.com/imctrl_f?igsh=MXdpM2hmdGdoN2RobQ=="
+          target="_blank"
+          rel="noopener"
+          class="footer-ig"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+          </svg>
+          @imctrl_f
+        </a>
+      </div>
+    </footer>
 
-    <!-- SHADOWBAN -->
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-title"><span class="icon">👻</span> Shadowban — Musuh Terbesar Clipper</div>
-      <p style="color:var(--muted);font-size:14px;margin-bottom:16px;"><strong style="color:var(--warn)">Shadowban</strong> adalah kondisi dimana TikTok membatasi distribusi videomu secara diam-diam — video tetap ada, tapi nyaris tidak ada yang melihat. Views mandek di angka kecil tanpa alasan jelas.</p>
+    <script>
+      /* ── CPM Calculator ──────────────────────────────────── */
+      function calcPayout() {
+        const views =
+          parseFloat(document.getElementById("calc-views").value) || 0;
+        const cpm = parseFloat(document.getElementById("calc-cpm").value) || 0;
+        const payout = (views / 1000) * cpm;
+        document.getElementById("calc-output").textContent =
+          "Rp " + Math.round(payout).toLocaleString("id-ID");
+      }
 
-      <!-- shadowban vs normal illustration -->
-      <svg viewBox="0 0 680 130" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;border-radius:10px;background:#0c0e14;margin-bottom:16px;">
-        <!-- normal side -->
-        <text x="170" y="20" text-anchor="middle" fill="#00d4aa" font-size="11" font-family="sans-serif" font-weight="700">✅ Akun Normal</text>
-        <polyline points="30,100 80,80 130,60 180,40 230,55 280,35" fill="none" stroke="#00d4aa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle cx="280" cy="35" r="5" fill="#00d4aa"/>
-        <text x="290" y="38" fill="#00d4aa" font-size="10" font-family="monospace">📈 FYP</text>
-        <!-- axis -->
-        <line x1="30" y1="105" x2="300" y2="105" stroke="#252a38" stroke-width="1"/>
-        <line x1="30" y1="30" x2="30" y2="105" stroke="#252a38" stroke-width="1"/>
-        <text x="160" y="120" text-anchor="middle" fill="#7a8099" font-size="9" font-family="sans-serif">Waktu →</text>
-        <!-- divider -->
-        <line x1="340" y1="10" x2="340" y2="120" stroke="#252a38" stroke-width="1" stroke-dasharray="4,3"/>
-        <!-- shadowban side -->
-        <text x="510" y="20" text-anchor="middle" fill="#ff5e5e" font-size="11" font-family="sans-serif" font-weight="700">⛔ Kena Shadowban</text>
-        <polyline points="370,80 420,75 470,78 520,76 570,79 620,77" fill="none" stroke="#ff5e5e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6,3"/>
-        <circle cx="620" cy="77" r="5" fill="#ff5e5e"/>
-        <text x="500" y="50" text-anchor="middle" fill="#ff5e5e" font-size="10" font-family="sans-serif">Views nyaris nol, FYP tidak jalan</text>
-        <!-- axis -->
-        <line x1="370" y1="105" x2="640" y2="105" stroke="#252a38" stroke-width="1"/>
-        <line x1="370" y1="30" x2="370" y2="105" stroke="#252a38" stroke-width="1"/>
-        <text x="505" y="120" text-anchor="middle" fill="#7a8099" font-size="9" font-family="sans-serif">Waktu →</text>
+      /* ── Active nav on scroll ─────────────────────────────── */
+      const navLinks = document.querySelectorAll(".pnav-item");
+      const chapters = document.querySelectorAll(".chapter");
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              navLinks.forEach((l) => l.classList.remove("active"));
+              const link = document.querySelector(
+                `.pnav-item[href="#${entry.target.id}"]`,
+              );
+              if (link) link.classList.add("active");
+            }
+          });
+        },
+        { rootMargin: "-30% 0px -60% 0px" },
+      );
+
+      chapters.forEach((c) => observer.observe(c));
+    </script>
+
+    <a
+      href="https://www.instagram.com/imctrl_f?igsh=MXdpM2hmdGdoN2RobQ=="
+      target="_blank"
+      rel="noopener"
+      class="ig-float"
+    >
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
       </svg>
-
-      <div style="margin-bottom:14px;">
-        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;">⚠️ Penyebab Shadowban:</div>
-        <div class="rules-list">
-          <div class="rule-item">
-            <div class="rule-x">!</div>
-            <div class="rule-text">Upload terlalu banyak video dalam waktu singkat (spam upload)</div>
-          </div>
-          <div class="rule-item">
-            <div class="rule-x">!</div>
-            <div class="rule-text">Video di-report banyak pengguna (konten dianggap melanggar)</div>
-          </div>
-          <div class="rule-item">
-            <div class="rule-x">!</div>
-            <div class="rule-text">Menggunakan hashtag yang di-banned atau terlalu banyak hashtag tidak relevan</div>
-          </div>
-          <div class="rule-item">
-            <div class="rule-x">!</div>
-            <div class="rule-text">Akun baru yang terlalu agresif upload dalam 24 jam pertama</div>
-          </div>
-          <div class="rule-item">
-            <div class="rule-x">!</div>
-            <div class="rule-text">Menggunakan audio/musik yang terkena copyright strike</div>
-          </div>
-        </div>
-      </div>
-
-      <div style="margin-top:4px;">
-        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;">✅ Cara Mengatasi Shadowban:</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <div class="rule-item" style="border-color:rgba(0,212,170,0.2);">
-            <div class="rule-x" style="background:rgba(0,212,170,0.1);border-color:rgba(0,212,170,0.3);color:var(--accent2);">1</div>
-            <div class="rule-text">Berhenti upload selama <strong style="color:var(--text)">24–72 jam</strong> dan jangan hapus video lama.</div>
-          </div>
-          <div class="rule-item" style="border-color:rgba(0,212,170,0.2);">
-            <div class="rule-x" style="background:rgba(0,212,170,0.1);border-color:rgba(0,212,170,0.3);color:var(--accent2);">2</div>
-            <div class="rule-text">Cek <span class="tag">Creator Tools → Akun</span> apakah ada notifikasi pelanggaran dari TikTok.</div>
-          </div>
-          <div class="rule-item" style="border-color:rgba(0,212,170,0.2);">
-            <div class="rule-x" style="background:rgba(0,212,170,0.1);border-color:rgba(0,212,170,0.3);color:var(--accent2);">3</div>
-            <div class="rule-text">Setelah jeda, mulai lagi dengan 1 video berkualitas tinggi — jangan langsung spam.</div>
-          </div>
-          <div class="rule-item" style="border-color:rgba(0,212,170,0.2);">
-            <div class="rule-x" style="background:rgba(0,212,170,0.1);border-color:rgba(0,212,170,0.3);color:var(--accent2);">4</div>
-            <div class="rule-text">Aktifkan akun dengan interaksi organik — tonton, like, dan komen video orang lain selama masa jeda.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CONSISTENCY -->
-    <div class="card">
-      <div class="card-title"><span class="icon">📅</span> Konsistensi — Kunci Jangka Panjang</div>
-      <p style="color:var(--muted);font-size:14px;margin-bottom:16px;">Algoritma TikTok menyukai akun yang aktif secara konsisten. Frekuensi upload yang stabil membangun momentum channel-mu.</p>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;">
-          <div style="font-size:28px;margin-bottom:8px;">🐌</div>
-          <div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;">Pemula</div>
-          <div style="font-size:15px;font-weight:700;color:var(--accent);">1–2 video/hari</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Fokus kualitas dulu</div>
-        </div>
-        <div style="background:rgba(124,92,252,0.06);border:1px solid rgba(124,92,252,0.25);border-radius:12px;padding:16px;text-align:center;">
-          <div style="font-size:28px;margin-bottom:8px;">⚡</div>
-          <div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:4px;">Ideal</div>
-          <div style="font-size:15px;font-weight:700;color:var(--accent);">3–5 video/hari</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Ritme terbaik</div>
-        </div>
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;">
-          <div style="font-size:28px;margin-bottom:8px;">🚀</div>
-          <div style="font-size:12px;font-weight:600;color:var(--accent2);margin-bottom:4px;">Pro</div>
-          <div style="font-size:15px;font-weight:700;color:var(--accent2);">5–10 video/hari</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;">Volume tinggi</div>
-        </div>
-      </div>
-      <div class="info-box warn" style="margin-top:14px;margin-bottom:0;">
-        <div class="info-box-icon">⚠️</div>
-        <div class="info-box-text">Jangan upload lebih dari <strong style="color:var(--warn)">10 video dalam 1 jam</strong> — ini sinyal spam ke algoritma TikTok dan bisa memicu shadowban instan.</div>
-      </div>
-    </div>
-
-  </section>
-
-  <!-- ─── COMPLETION BANNER ─────────────────────────────── -->
-  <div style="background:linear-gradient(135deg,rgba(124,92,252,0.12),rgba(0,212,170,0.08));border:1px solid rgba(124,92,252,0.25);border-radius:20px;padding:40px;text-align:center;margin-bottom:64px;">
-    <div style="font-size:48px;margin-bottom:16px;">🚀</div>
-    <h2 style="font-size:24px;font-weight:700;letter-spacing:-0.5px;margin-bottom:12px;">Kamu Sudah Siap 100%!</h2>
-    <p style="color:var(--muted);font-size:15px;max-width:480px;margin:0 auto;">Selamat! Kamu sudah memahami semua alur dari Discord hingga payout. Tetap semangat, banyak bereksperimen dengan editing, dan salam <strong style="color:var(--accent2)">PAYOUT!</strong></p>
-  </div>
-
-</div><!-- /container -->
-
-<!-- FOOTER -->
-<footer class="footer">
-  <div class="container">
-    <div class="footer-logo">Motion<span>Klip</span></div>
-    <div class="footer-sub">Modul Panduan Clipper — Dari Nol Sampai Payout</div>
-    <br/>
-    <a href="https://www.instagram.com/imctrl_f?igsh=MXdpM2hmdGdoN2RobQ==" target="_blank" rel="noopener" class="footer-ig">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
       @imctrl_f
     </a>
-  </div>
-</footer>
-
-<script>
-  /* ── CPM Calculator ──────────────────────────────────── */
-  function calcPayout() {
-    const views = parseFloat(document.getElementById('calc-views').value) || 0;
-    const cpm   = parseFloat(document.getElementById('calc-cpm').value)   || 0;
-    const payout = (views / 1000) * cpm;
-    document.getElementById('calc-output').textContent =
-      'Rp ' + Math.round(payout).toLocaleString('id-ID');
-  }
-
-  /* ── Active nav on scroll ─────────────────────────────── */
-  const navLinks = document.querySelectorAll('.pnav-item');
-  const chapters = document.querySelectorAll('.chapter');
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        navLinks.forEach(l => l.classList.remove('active'));
-        const link = document.querySelector(`.pnav-item[href="#${entry.target.id}"]`);
-        if (link) link.classList.add('active');
-      }
-    });
-  }, { rootMargin: '-30% 0px -60% 0px' });
-
-  chapters.forEach(c => observer.observe(c));
-</script>
-
-<!-- IG FLOAT BUTTON -->
-<a href="https://www.instagram.com/imctrl_f?igsh=MXdpM2hmdGdoN2RobQ==" target="_blank" rel="noopener" class="ig-float">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-  @imctrl_f
-</a>
-</body>
+  </body>
 </html>
